@@ -42,8 +42,7 @@ export default function SignUpPage() {
       return
     }
 
-    setMessage('Te enviamos un correo para confirmar tu cuenta. Revisa tu bandeja de entrada.')
-    setLoading(false)
+    window.location.assign('/auth/sign-up-success')
   }
 
   return (
