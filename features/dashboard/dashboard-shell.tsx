@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowUpRight,
   Bell,
@@ -42,11 +44,18 @@ const initialTasks = [
   { title: 'Actualizar gastos del proyecto Lumen', project: 'Finanzas', due: 'Vie, 17:00', done: false },
 ]
 
-export function DashboardShell() {
+export function DashboardShell({ user }: { user?: { name: string; email: string; avatar?: string } }) {
   const [active, setActive] = useState('Resumen')
   const [tasks, setTasks] = useState(initialTasks)
   const [query, setQuery] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const router = useRouter()
+
+  async function signOut() {
+    await createClient().auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   const visibleClients = useMemo(() => clients.filter((client) => client.name.toLowerCase().includes(query.toLowerCase())), [query])
   const completed = tasks.filter((task) => task.done).length
@@ -71,7 +80,7 @@ export function DashboardShell() {
         </div>
         <div className="mt-auto flex flex-col gap-2">
           <button className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent"><Settings className="size-4" />Configuración</button>
-          <div className="mt-4 flex items-center gap-3 border-t border-sidebar-border pt-5"><div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">LR</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">Lucas Ramírez</p><p className="truncate text-xs text-sidebar-foreground/50">Administrador</p></div><ChevronDown className="size-4 text-sidebar-foreground/50" /></div>
+          <div className="mt-4 flex items-center gap-3 border-t border-sidebar-border pt-5"><div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">LR</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{user?.name ?? 'Administrador'}</p><p className="truncate text-xs text-sidebar-foreground/50">{user?.email ?? 'Administrador'}</p></div><button onClick={signOut} aria-label="Cerrar sesión" className="text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground">Salir</button><ChevronDown className="size-4 text-sidebar-foreground/50" /></div>
         </div>
       </aside>
       {mobileOpen && <button className="fixed inset-0 z-20 bg-foreground/30 lg:hidden" aria-label="Cerrar menú" onClick={() => setMobileOpen(false)} />}
