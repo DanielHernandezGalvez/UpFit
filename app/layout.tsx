@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: "Upfit",
     template: "%s · Upfit",
   },
-  description: "Registra tus entrenamientos y sigue tu progreso en el gimnasio.",
+  description: "Registra tus entrenamientos y sigue tu progreso en el gym.",
   appleWebApp: {
     capable: true,
     title: "Upfit",
