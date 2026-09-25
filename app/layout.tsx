@@ -1,36 +1,41 @@
-import { Analytics } from '@vercel/analytics/next'
-import { Kumbh_Sans } from 'next/font/google'
-import type { Metadata, Viewport } from 'next'
-import './globals.css'
+import type { Metadata, Viewport } from "next"
+import { Geist } from "next/font/google"
 
-const kumbhSans = Kumbh_Sans({ subsets: ['latin'], variable: '--font-kumbh-sans' })
+import { PwaRegister } from "@/components/pwa-register"
+import "./globals.css"
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+})
 
 export const metadata: Metadata = {
-  title: 'El Creador Web · Business OS',
-  description: 'Administra clientes, finanzas, impuestos y tareas de El Creador Web.',
-  generator: 'El Creador Web',
+  applicationName: "Upfit",
+  title: {
+    default: "Upfit",
+    template: "%s · Upfit",
+  },
+  description: "Registra tus entrenamientos y sigue tu progreso en el gimnasio.",
+  appleWebApp: {
+    capable: true,
+    title: "Upfit",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: '/apple-icon.png',
+    apple: "/apple-touch-icon.png",
   },
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#0E1620',
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#ffffff",
+  colorScheme: "light",
 }
 
 export default function RootLayout({
@@ -39,10 +44,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className="bg-background">
-      <body className={`${kumbhSans.variable} font-sans antialiased`}>
+    <html lang="es" className={geist.variable}>
+      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <PwaRegister />
       </body>
     </html>
   )
