@@ -107,7 +107,7 @@ export function ExerciseLogger({
                 size="icon-lg"
                 variant="outline"
                 aria-label="Bajar peso"
-                onClick={() => setPeso((current) => changeWeight(current, -2.5))}
+                onClick={() => setPeso((current) => changeWeight(current, -1))}
               >
                 −
               </Button>
@@ -119,7 +119,7 @@ export function ExerciseLogger({
                 size="icon-lg"
                 variant="outline"
                 aria-label="Subir peso"
-                onClick={() => setPeso((current) => changeWeight(current, 2.5))}
+                onClick={() => setPeso((current) => changeWeight(current, 1))}
               >
                 +
               </Button>

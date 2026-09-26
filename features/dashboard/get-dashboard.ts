@@ -58,7 +58,7 @@ async function loadDashboard(userId: string, accessToken: string) {
 
   const topIds = [...bestByExercise.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
+    .slice(0, 5)
     .map(([id]) => id)
 
   const { data: exercises } = topIds.length

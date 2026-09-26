@@ -233,12 +233,10 @@ export function RoutineForm({
         </Button>
       </section>
 
-      <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] px-4 md:bottom-6">
-        <div className="mx-auto w-full max-w-md">
-          <Button type="submit" size="touch" className="w-full" disabled={pending}>
-            {pending ? "Guardando..." : "Guardar rutina"}
-          </Button>
-        </div>
+      <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-4">
+        <Button type="submit" size="touch" className="w-full" disabled={pending}>
+          {pending ? "Guardando..." : "Guardar rutina"}
+        </Button>
       </div>
     </form>
   )

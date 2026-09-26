@@ -20,7 +20,7 @@ export default async function RoutinesPage() {
     .order("created_at", { ascending: true })
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-40 md:max-w-3xl md:pb-28">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pb-10">
       <header className="space-y-2">
         <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
           Upfit
@@ -58,18 +58,14 @@ export default async function RoutinesPage() {
         </ul>
       )}
 
-      <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] px-4 md:bottom-6">
-        <div className="mx-auto w-full max-w-md md:max-w-3xl">
-          <Button
-            nativeButton={false}
-            render={<Link href="/routines/new" />}
-            size="touch"
-            className="w-full"
-          >
-            Crear rutina
-          </Button>
-        </div>
-      </div>
+      <Button
+        nativeButton={false}
+        render={<Link href="/routines/new" />}
+        size="touch"
+        className="mt-2 w-full"
+      >
+        Crear rutina
+      </Button>
     </main>
   )
 }

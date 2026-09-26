@@ -70,7 +70,7 @@ export function hasActiveStreak(trained: Set<string>, now = new Date()) {
 
 export function topPersonalRecords(
   sets: PersonalRecord[],
-  limit = 3,
+  limit = 5,
 ): PersonalRecord[] {
   const best = new Map<string, PersonalRecord>()
 

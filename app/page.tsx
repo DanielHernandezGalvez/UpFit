@@ -130,7 +130,7 @@ async function HomeContent() {
         </div>
         {dashboard.records.length === 0 ? (
           <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-            Cuando registres series, aquí verás los 3 ejercicios con más peso.
+            Cuando registres series, aquí verás los 5 ejercicios con más peso.
           </p>
         ) : (
           <ol className="mt-4 flex flex-col gap-4">

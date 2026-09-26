@@ -10,7 +10,7 @@ El fondo es blanco y el amarillo marca la acción principal de cada pantalla.
 2. **Entrar.** En `/auth/login` usa ese correo y contraseña. Si la olvida, `/auth/forgot-password` manda un enlace para elegir una nueva en `/auth/update-password`.
 3. **Ver el dashboard.** Después de entrar llega a la pantalla principal:
    - días entrenados en los últimos 7 días y en el año en curso (sesiones con fecha distinta);
-   - las 3 mejores marcas, el mayor peso registrado por ejercicio;
+   - las 5 mejores marcas, el mayor peso registrado por ejercicio;
    - **Mis rutinas**;
    - **Iniciar rutina**.
 4. **Armar rutinas antes de entrenar.** En **Mis rutinas** o, si todavía no hay ninguna, en el botón **Crear rutina**:
