@@ -91,6 +91,7 @@ export default async function WorkoutSessionPage({
         .select("exercise_id, peso, repeticiones, created_at")
         .in("exercise_id", exerciseIds)
         .order("created_at", { ascending: false })
+        .limit(40)
     : { data: [] }
 
   const suggestions = new Map<string, { peso: number; repeticiones: number }>()
@@ -103,7 +104,7 @@ export default async function WorkoutSessionPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-28">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-40 md:max-w-3xl md:pb-28">
       <header className="space-y-1">
         <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
           {formatSessionDate(session.fecha)}
@@ -143,7 +144,7 @@ export default async function WorkoutSessionPage({
         })
       )}
 
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] px-4 md:bottom-6">
         <form action={finishWorkout} className="mx-auto w-full max-w-md">
           <input type="hidden" name="sessionId" value={session.id} />
           <Button type="submit" variant="outline" size="touch" className="w-full">

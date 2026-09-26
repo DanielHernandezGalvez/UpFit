@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
 import type { ExerciseOption, RoutineFormState } from "@/features/routines/types"
+import { revalidateUserViews } from "@/lib/revalidate-user"
 import { createClient } from "@/lib/supabase/server"
 
 const UUID_PATTERN =
@@ -177,5 +178,6 @@ export async function saveRoutine(
   revalidatePath("/routines")
   revalidatePath(`/routines/${id}`)
   revalidatePath("/workout")
+  revalidateUserViews(user.id)
   return { redirectTo: "/routines" }
 }

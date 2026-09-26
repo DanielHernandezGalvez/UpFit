@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next"
-import { Geist } from "next/font/google"
+import { Poppins } from "next/font/google"
 
+import { AppNav } from "@/components/app-nav"
 import { PwaRegister } from "@/components/pwa-register"
 import "./globals.css"
 
-const geist = Geist({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -23,7 +26,6 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -44,8 +46,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={geist.variable}>
+    <html lang="es" className={poppins.variable}>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
+        <AppNav />
         {children}
         <PwaRegister />
       </body>

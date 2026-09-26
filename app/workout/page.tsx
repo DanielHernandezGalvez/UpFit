@@ -21,7 +21,7 @@ export default async function WorkoutPage() {
     .order("created_at", { ascending: true })
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 py-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-24 md:max-w-3xl md:pb-10">
       <header className="space-y-2">
         <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
           Upfit
@@ -37,25 +37,16 @@ export default async function WorkoutPage() {
         <StartRoutineList routines={routines} />
       )}
 
-      <div className="mt-auto flex flex-col gap-3">
+      {!routines?.length ? (
         <Button
           nativeButton={false}
-          render={<Link href={routines?.length ? "/routines" : "/routines/new"} />}
+          render={<Link href="/routines/new" />}
           size="touch"
           className="w-full"
         >
-          {routines?.length ? "Mis rutinas" : "Crear rutina"}
+          Crear rutina
         </Button>
-        <Button
-          nativeButton={false}
-          render={<Link href="/" />}
-          variant="outline"
-          size="touch"
-          className="w-full"
-        >
-          Volver
-        </Button>
-      </div>
+      ) : null}
     </main>
   )
 }

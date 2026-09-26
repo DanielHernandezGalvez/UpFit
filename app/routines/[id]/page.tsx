@@ -51,7 +51,7 @@ export default async function EditRoutinePage({
     .map((item) => item.exercise_id)
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-8 pb-28">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-8 pb-40 md:max-w-3xl md:pb-28">
       <header className="mb-6 space-y-2">
         <Link
           href="/routines"

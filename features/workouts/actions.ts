@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { isoDate } from "@/features/dashboard/stats"
+import { revalidateUserViews } from "@/lib/revalidate-user"
 import { createClient } from "@/lib/supabase/server"
 
 const UUID_PATTERN =
@@ -77,7 +78,7 @@ export async function addSet(
     return { error: "Las repeticiones tienen que ser un número entero." }
   }
 
-  const { supabase } = await requireUser()
+  const { supabase, user } = await requireUser()
   const { data: session } = await supabase
     .from("workout_sessions")
     .select("id")
@@ -116,6 +117,7 @@ export async function addSet(
   revalidatePath(`/workout/${sessionId}`)
   revalidatePath("/")
   revalidatePath("/history")
+  revalidateUserViews(user.id)
   return { savedId: data.id }
 }
 
@@ -126,7 +128,7 @@ export async function finishWorkout(formData: FormData) {
     redirect("/workout")
   }
 
-  const { supabase } = await requireUser()
+  const { supabase, user } = await requireUser()
   const { data: sets } = await supabase
     .from("session_sets")
     .select("id")
@@ -135,10 +137,12 @@ export async function finishWorkout(formData: FormData) {
 
   if (!sets?.length) {
     await supabase.from("workout_sessions").delete().eq("id", sessionId)
+    revalidateUserViews(user.id)
     redirect("/")
   }
 
   revalidatePath("/")
   revalidatePath("/history")
+  revalidateUserViews(user.id)
   redirect("/")
 }

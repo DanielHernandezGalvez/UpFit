@@ -1,8 +1,9 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import { formatSessionDate } from "@/features/history/format"
+import { embeddedCount } from "@/lib/revalidate-user"
 import { createClient } from "@/lib/supabase/server"
 
 type RoutineEmbed = { nombre: string } | { nombre: string }[] | null
@@ -13,7 +14,25 @@ function routineName(value: RoutineEmbed) {
   return value.nombre
 }
 
-export default async function HistoryPage() {
+export default function HistoryPage() {
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-24 md:max-w-3xl md:pb-10">
+      <header className="space-y-2">
+        <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+          Upfit
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">Historial</h1>
+      </header>
+      <Suspense
+        fallback={<div className="h-40 animate-pulse rounded-3xl bg-muted" aria-hidden="true" />}
+      >
+        <HistoryList />
+      </Suspense>
+    </main>
+  )
+}
+
+async function HistoryList() {
   const supabase = await createClient()
   const {
     data: { user },
@@ -25,22 +44,16 @@ export default async function HistoryPage() {
 
   const { data } = await supabase
     .from("workout_sessions")
-    .select("id, fecha, created_at, routines(nombre), session_sets(id)")
+    .select("id, fecha, created_at, routines(nombre), session_sets(count)")
     .order("fecha", { ascending: false })
     .order("created_at", { ascending: false })
 
   const sessions = (data ?? []).filter(
-    (session) => (session.session_sets?.length ?? 0) > 0,
+    (session) => embeddedCount(session.session_sets) > 0,
   )
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-28">
-      <header className="space-y-2">
-        <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-          Upfit
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Historial</h1>
-      </header>
+    <>
 
       {sessions.length === 0 ? (
         <p className="text-base leading-relaxed text-muted-foreground">
@@ -50,7 +63,7 @@ export default async function HistoryPage() {
         <ul className="flex flex-col gap-3">
           {sessions.map((session) => {
             const nombre = routineName(session.routines as RoutineEmbed)
-            const count = session.session_sets?.length ?? 0
+            const count = embeddedCount(session.session_sets)
             const detail = count === 1 ? "1 serie" : `${count} series`
 
             return (
@@ -76,20 +89,6 @@ export default async function HistoryPage() {
           })}
         </ul>
       )}
-
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-md">
-          <Button
-            nativeButton={false}
-            render={<Link href="/" />}
-            variant="outline"
-            size="touch"
-            className="w-full"
-          >
-            Volver
-          </Button>
-        </div>
-      </div>
-    </main>
+    </>
   )
 }

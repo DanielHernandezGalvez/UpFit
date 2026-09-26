@@ -1,19 +1,7 @@
-const CACHE = "upfit-v1"
+const CACHE = "upfit-v2"
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) =>
-        cache.addAll([
-          "/favicon.svg",
-          "/icon-192.png",
-          "/icon-512.png",
-          "/apple-touch-icon.png",
-        ]),
-      )
-      .then(() => self.skipWaiting()),
-  )
+  event.waitUntil(self.skipWaiting())
 })
 
 self.addEventListener("activate", (event) => {
@@ -34,7 +22,24 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
+  const isStatic =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icon-") ||
+    url.pathname === "/apple-touch-icon.png"
+
+  if (!isStatic) return
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached
+
+      return fetch(event.request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone()
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy))
+        }
+        return response
+      })
+    }),
   )
 })

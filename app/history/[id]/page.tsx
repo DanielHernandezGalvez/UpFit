@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import { formatKg } from "@/features/dashboard/stats"
 import { formatSessionDate } from "@/features/history/format"
 import { createClient } from "@/lib/supabase/server"
@@ -76,7 +75,7 @@ export default async function HistoryDetailPage({
   const routine = oneName(session.routines as RoutineEmbed)
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-28">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-24 md:max-w-3xl md:pb-10">
       <header className="space-y-1">
         <Link
           href="/history"
@@ -116,20 +115,6 @@ export default async function HistoryDetailPage({
           </section>
         ))
       )}
-
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-md">
-          <Button
-            nativeButton={false}
-            render={<Link href="/" />}
-            variant="outline"
-            size="touch"
-            className="w-full"
-          >
-            Ir al inicio
-          </Button>
-        </div>
-      </div>
     </main>
   )
 }

@@ -233,7 +233,7 @@ export function RoutineForm({
         </Button>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] px-4 md:bottom-6">
         <div className="mx-auto w-full max-w-md">
           <Button type="submit" size="touch" className="w-full" disabled={pending}>
             {pending ? "Guardando..." : "Guardar rutina"}

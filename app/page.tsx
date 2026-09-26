@@ -1,17 +1,7 @@
-import Link from "next/link"
+import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import {
-  CalendarDays,
-  Check,
-  ChevronRight,
-  Dumbbell,
-  Flame,
-  LogOut,
-  Play,
-  Trophy,
-} from "lucide-react"
+import { Check, Flame, LogOut, Trophy } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { logout } from "@/features/auth/actions"
 import { formatKg } from "@/features/dashboard/stats"
 import { getDashboard } from "@/features/dashboard/get-dashboard"
@@ -27,7 +17,27 @@ function daysLabel(count: number) {
   return count === 1 ? "día entrenado" : "días entrenados"
 }
 
-export default async function HomePage() {
+function HomeFallback() {
+  return (
+    <div className="flex flex-col gap-4" aria-hidden="true">
+      <div className="h-12 w-2/3 animate-pulse rounded-full bg-muted" />
+      <div className="h-52 animate-pulse rounded-3xl bg-muted" />
+      <div className="h-40 animate-pulse rounded-3xl bg-muted" />
+    </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
+      <Suspense fallback={<HomeFallback />}>
+        <HomeContent />
+      </Suspense>
+    </main>
+  )
+}
+
+async function HomeContent() {
   const dashboard = await getDashboard()
 
   if (!dashboard) {
@@ -35,7 +45,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-28">
+    <>
       <header className="flex items-center gap-3">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
           {initials(dashboard.nombre)}
@@ -59,38 +69,7 @@ export default async function HomePage() {
         </form>
       </header>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <Button
-          nativeButton={false}
-          render={<Link href="/routines" />}
-          variant="outline"
-          className="h-14 w-full justify-between px-3"
-        >
-          <span className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-muted">
-              <Dumbbell className="size-4" />
-            </span>
-            <span className="text-sm">Mis rutinas</span>
-          </span>
-          <ChevronRight className="size-4 text-muted-foreground" />
-        </Button>
-        <Button
-          nativeButton={false}
-          render={<Link href="/history" />}
-          variant="outline"
-          className="h-14 w-full justify-between px-3"
-        >
-          <span className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-muted">
-              <CalendarDays className="size-4" />
-            </span>
-            <span className="text-sm">Historial</span>
-          </span>
-          <ChevronRight className="size-4 text-muted-foreground" />
-        </Button>
-      </div>
-
-      <section className="mt-4 rounded-3xl border bg-card p-4 shadow-sm">
+      <section className="mt-6 rounded-3xl border bg-card p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
             Últimos 7 días
@@ -183,20 +162,6 @@ export default async function HomePage() {
           </ol>
         )}
       </section>
-
-      <div className="fixed inset-x-0 bottom-0 bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-md">
-          <Button
-            nativeButton={false}
-            render={<Link href="/workout" />}
-            size="touch"
-            className="w-full shadow-sm"
-          >
-            <Play className="fill-current" />
-            Iniciar rutina
-          </Button>
-        </div>
-      </div>
-    </main>
+    </>
   )
 }
