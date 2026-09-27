@@ -42,8 +42,11 @@ Fuera de este alcance: editar o borrar series ya guardadas, gráficas, reordenar
 
 ```bash
 corepack pnpm install
+corepack pnpm test
 corepack pnpm dev
 ```
+
+`pnpm test` revisa fechas, marcas, grupos musculares y los mensajes de acceso. También corre en GitHub antes de integrar cambios.
 
 La app queda en `http://localhost:3000`.
 

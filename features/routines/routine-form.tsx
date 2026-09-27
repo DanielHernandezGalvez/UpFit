@@ -149,49 +149,6 @@ export function RoutineForm({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Tu catálogo</h2>
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar ejercicio"
-          aria-label="Buscar ejercicio"
-        />
-        {exercises.length === 0 ? (
-          <p className="text-base text-muted-foreground">
-            Tu catálogo está vacío. Crea el primer ejercicio abajo.
-          </p>
-        ) : filtered.length === 0 ? (
-          <p className="text-base text-muted-foreground">
-            No hay ejercicios con ese nombre. Crea uno abajo.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {filtered.map((exercise) => {
-              const added = selectedIds.includes(exercise.id)
-              return (
-                <li key={exercise.id}>
-                  <button
-                    type="button"
-                    onClick={() => toggleExercise(exercise.id)}
-                    className={`flex h-14 w-full items-center justify-between gap-3 rounded-xl border px-4 text-left ${
-                      added ? "border-primary bg-accent" : "border-border bg-background"
-                    }`}
-                  >
-                    <span className="truncate text-base font-medium">
-                      {exercise.nombre}
-                    </span>
-                    <span className="shrink-0 text-sm text-muted-foreground">
-                      {added ? "Agregado" : exercise.grupo_muscular}
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Ejercicio nuevo</h2>
         <div className="flex flex-col gap-2">
           <Label htmlFor="nuevo-ejercicio">Nombre</Label>
@@ -231,6 +188,49 @@ export function RoutineForm({
         >
           {adding ? "Agregando..." : "Agregar ejercicio"}
         </Button>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Tu catálogo</h2>
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar ejercicio"
+          aria-label="Buscar ejercicio"
+        />
+        {exercises.length === 0 ? (
+          <p className="text-base text-muted-foreground">
+            Tu catálogo está vacío. Crea el primer ejercicio arriba.
+          </p>
+        ) : filtered.length === 0 ? (
+          <p className="text-base text-muted-foreground">
+            No hay ejercicios con ese nombre. Créalo arriba.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {filtered.map((exercise) => {
+              const added = selectedIds.includes(exercise.id)
+              return (
+                <li key={exercise.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleExercise(exercise.id)}
+                    className={`flex h-14 w-full items-center justify-between gap-3 rounded-xl border px-4 text-left ${
+                      added ? "border-primary bg-accent" : "border-border bg-background"
+                    }`}
+                  >
+                    <span className="truncate text-base font-medium">
+                      {exercise.nombre}
+                    </span>
+                    <span className="shrink-0 text-sm text-muted-foreground">
+                      {added ? "Agregado" : exercise.grupo_muscular}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </section>
 
       <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-4">

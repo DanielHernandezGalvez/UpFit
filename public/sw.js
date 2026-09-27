@@ -1,4 +1,4 @@
-const CACHE = "upfit-v2"
+const CACHE = "upfit-v3"
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting())
@@ -22,12 +22,10 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  const isStatic =
-    url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/icon-") ||
-    url.pathname === "/apple-touch-icon.png"
+  const isIcon =
+    url.pathname.startsWith("/icon-") || url.pathname === "/apple-touch-icon.png"
 
-  if (!isStatic) return
+  if (!isIcon) return
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

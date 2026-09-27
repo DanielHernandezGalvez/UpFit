@@ -3,7 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { formatSessionDate } from "@/features/history/format"
-import { embeddedCount } from "@/lib/revalidate-user"
+import { embeddedCount } from "@/lib/embedded-count"
 import { createClient } from "@/lib/supabase/server"
 
 type RoutineEmbed = { nombre: string } | { nombre: string }[] | null

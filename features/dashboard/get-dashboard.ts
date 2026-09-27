@@ -9,7 +9,7 @@ import {
   topPersonalRecords,
   type PersonalRecord,
 } from "@/features/dashboard/stats"
-import { embeddedCount } from "@/lib/revalidate-user"
+import { embeddedCount } from "@/lib/embedded-count"
 import { createClient } from "@/lib/supabase/server"
 import { createUserClient } from "@/lib/supabase/user-client"
 
