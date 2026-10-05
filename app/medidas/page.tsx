@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { MeasurementForm } from "@/features/measurements/measurement-form"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 type Measurement = {
   id: string
@@ -24,10 +24,7 @@ const labels: { key: keyof Omit<Measurement, "id" | "fecha">; label: string; uni
 ]
 
 export default async function MeasurementsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) redirect("/auth/login")
 

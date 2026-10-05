@@ -4,7 +4,7 @@ import { ExerciseLogger } from "@/features/workouts/exercise-logger"
 import { SessionExtras } from "@/features/workouts/session-extras"
 import { formatSessionDate } from "@/features/history/format"
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 type ExerciseEmbed = {
   nombre: string
@@ -37,10 +37,7 @@ export default async function WorkoutSessionPage({
 }) {
   const { sessionId } = await params
   const { aviso } = await searchParams
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

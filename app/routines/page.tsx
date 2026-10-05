@@ -4,13 +4,10 @@ import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { PublishRoutineButton } from "@/features/routines/publish-controls"
 import { ImportRoutineForm, ShareRoutineButton } from "@/features/routines/share-controls"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 export default async function RoutinesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

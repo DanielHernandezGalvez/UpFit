@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 
 import { formatSessionDate } from "@/features/history/format"
 import { embeddedCount } from "@/lib/embedded-count"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 type RoutineEmbed = { nombre: string } | { nombre: string }[] | null
 
@@ -33,10 +33,7 @@ export default function HistoryPage() {
 }
 
 async function HistoryList() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

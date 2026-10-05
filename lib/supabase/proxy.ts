@@ -3,6 +3,23 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { accessTokenNeedsRefresh } from "@/lib/supabase/access-token"
 
+function clearAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+  pendingCookies: {
+    name: string
+    value: string
+    options?: Parameters<typeof response.cookies.set>[2]
+  }[],
+) {
+  request.cookies.getAll().forEach((cookie) => {
+    if (!cookie.name.includes("auth-token")) return
+    const options = { path: "/", maxAge: 0 }
+    response.cookies.set(cookie.name, "", options)
+    pendingCookies.push({ name: cookie.name, value: "", options })
+  })
+}
+
 const PUBLIC_PATHS = new Set([
   "/",
   "/auth/login",
@@ -63,25 +80,36 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getSession()
   let user = session?.user ?? null
 
-  if (
-    accessTokenNeedsRefresh(
-      session?.access_token,
-      Math.floor(Date.now() / 1000),
-    )
-  ) {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  const tokenNeedsRefresh = accessTokenNeedsRefresh(session?.access_token, nowSeconds)
+
+  if (tokenNeedsRefresh) {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+      user = null
+      clearAuthCookies(request, supabaseResponse, pendingCookies)
+    } else {
+      user = data.user
+    }
   }
 
   const { pathname } = request.nextUrl
   let redirectPath: string | null = null
 
+  if (user && AUTH_ENTRY_PATHS.has(pathname)) {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
+      user = null
+      clearAuthCookies(request, supabaseResponse, pendingCookies)
+    } else {
+      redirectPath = "/"
+    }
+  }
+
   if (!user && pathname === "/auth/update-password") {
     redirectPath = "/auth/forgot-password"
-  } else if (!user && !PUBLIC_PATHS.has(pathname)) {
+  } else if (!user && !PUBLIC_PATHS.has(pathname) && !redirectPath) {
     redirectPath = "/auth/login"
-  } else if (user && AUTH_ENTRY_PATHS.has(pathname)) {
-    redirectPath = "/"
   }
 
   if (!redirectPath) {

@@ -32,3 +32,15 @@ El historial, además, pide la duración y el cardio. Si esa consulta corría an
   - Para pruebas locales también puede estar `http://localhost:3000/auth/callback`
 
 El correo que ya se había enviado sigue apuntando a localhost. Hay que pedir otro, o confirmar esa cuenta desde la computadora donde corre la app. En Vercel hace falta la misma variable `NEXT_PUBLIC_SITE_URL` y un despliegue nuevo para que el sitio publicado use este enlace.
+
+## Entrar no hacía nada después de cerrar la sesión
+
+**Qué pasaba.** Con la cuenta principal, la app cerraba la sesión. Después, Entrar y Crear cuenta no dejaban pasar: volvían al inicio.
+
+**Por qué.** Quedaba una cookie de sesión vencida. El proxy la tomaba como si siguieras dentro y mandaba `/auth/login` de regreso a `/`. En el inicio, la sesión ya no servía, así que otra vez salía la portada. Los botones repetían ese círculo. Además, renovar el token en la pantalla y en el proxy a la vez podía invalidar la sesión recién creada.
+
+**Cómo se solucionó.**
+
+- Si el token no se puede renovar, se borran las cookies de acceso.
+- La pantalla de entrar solo regresa al inicio cuando la sesión se confirma con el servidor.
+- Las pantallas leen la sesión que ya renovó el proxy, con `lib/supabase/request-auth.ts`, y no vuelven a renovarla.

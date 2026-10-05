@@ -1,16 +1,13 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
 import { RoutineForm } from "@/features/routines/routine-form"
 import type { ExerciseOption } from "@/features/routines/types"
 
 export default async function NewRoutinePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

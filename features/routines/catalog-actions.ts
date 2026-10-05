@@ -5,16 +5,13 @@ import { redirect } from "next/navigation"
 
 import { loadPublicRoutinePage, type PublicRoutinePage } from "@/features/routines/catalog-data"
 import type { RoutineFormState } from "@/features/routines/types"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 async function requireUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

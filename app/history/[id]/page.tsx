@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 
 import { formatKg } from "@/features/dashboard/stats"
 import { formatSessionDate } from "@/features/history/format"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 type RoutineEmbed = { nombre: string } | { nombre: string }[] | null
 type ExerciseEmbed = { nombre: string } | { nombre: string }[] | null
@@ -20,10 +20,7 @@ export default async function HistoryDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

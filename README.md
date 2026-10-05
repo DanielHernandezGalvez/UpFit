@@ -48,7 +48,7 @@ corepack pnpm dev
 
 `pnpm test` revisa fechas, marcas, grupos musculares y los mensajes de acceso. También corre en GitHub antes de integrar cambios.
 
-La app queda en `http://localhost:3000`.
+La app queda en `https://up-fit-eight.vercel.app/`.
 
 ## Instalarla como PWA
 

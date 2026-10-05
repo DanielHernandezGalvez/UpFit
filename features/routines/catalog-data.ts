@@ -5,7 +5,7 @@ import {
   takePublicPage,
   type PublicRoutine,
 } from "@/features/routines/catalog"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 export type PublicRoutinePage = {
   routines: PublicRoutine[]
@@ -14,10 +14,7 @@ export type PublicRoutinePage = {
 }
 
 export async function loadPublicRoutinePage(offset: number): Promise<PublicRoutinePage> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     return { routines: [], hasMore: false, unavailable: false }

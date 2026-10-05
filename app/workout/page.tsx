@@ -3,13 +3,10 @@ import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { StartRoutineList } from "@/features/workouts/start-routine-list"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 export default async function WorkoutPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

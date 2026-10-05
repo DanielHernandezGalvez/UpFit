@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { isoDate } from "@/features/dashboard/stats"
 import { isCardioOption } from "@/features/workouts/plan"
 import { revalidateUserViews } from "@/lib/revalidate-user"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -19,10 +19,7 @@ export type AddSetState = {
 } | null
 
 async function requireUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/login")

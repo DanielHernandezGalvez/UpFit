@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { mapAuthError } from "@/features/auth/messages"
 import { resolveAuthOrigin } from "@/features/auth/origin"
 import type { AuthFormState } from "@/features/auth/types"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 import { createClient } from "@/lib/supabase/server"
 
 async function getOrigin() {
@@ -141,10 +142,7 @@ export async function updatePassword(
     return { error: "Las contraseñas no coinciden." }
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) {
     redirect("/auth/forgot-password")

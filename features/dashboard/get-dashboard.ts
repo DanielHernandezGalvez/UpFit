@@ -10,7 +10,7 @@ import {
   type PersonalRecord,
 } from "@/features/dashboard/stats"
 import { embeddedCount } from "@/lib/embedded-count"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 import { createUserClient } from "@/lib/supabase/user-client"
 
 type ExerciseRow = {
@@ -116,17 +116,9 @@ export type DashboardResult =
   | { unavailable: true }
 
 export async function getDashboard(): Promise<DashboardResult | null> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { user, session } = await getRequestAuth()
 
   if (!user) return null
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
   if (!session?.access_token) return { unavailable: true }
 
   try {

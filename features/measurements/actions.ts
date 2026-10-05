@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 
 import { parseMeasurement } from "@/features/measurements/parse"
 import type { RoutineFormState } from "@/features/routines/types"
-import { createClient } from "@/lib/supabase/server"
+import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 export async function saveMeasurement(
   _previous: RoutineFormState,
@@ -23,10 +23,7 @@ export async function saveMeasurement(
 
   if ("error" in parsed) return parsed
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { supabase, user } = await getRequestAuth()
 
   if (!user) redirect("/auth/login")
 
