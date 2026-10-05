@@ -5,6 +5,7 @@ import { logout } from "@/features/auth/actions"
 import { formatKg } from "@/features/dashboard/stats"
 import { getDashboard } from "@/features/dashboard/get-dashboard"
 import { LandingPage } from "@/features/landing/landing-page"
+import { PublicRoutinesSection } from "@/features/routines/public-routines-section"
 
 function initials(nombre: string) {
   const parts = nombre.trim().split(/\s+/).filter(Boolean)
@@ -31,7 +32,7 @@ export default function HomePage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
+        <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pt-8 md:pb-10">
           <HomeFallback />
         </main>
       }
@@ -48,8 +49,19 @@ async function HomeContent() {
     return <LandingPage />
   }
 
+  if ("unavailable" in dashboard) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pt-8 md:pb-10">
+        <h1 className="text-2xl font-semibold tracking-tight">Inicio</h1>
+        <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+          No pudimos cargar tus marcas. Recarga la página.
+        </p>
+      </main>
+    )
+  }
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pt-8 md:pb-10">
       <header className="flex items-center gap-3">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
           {initials(dashboard.nombre)}
@@ -166,6 +178,12 @@ async function HomeContent() {
           </ol>
         )}
       </section>
+
+      <Suspense
+        fallback={<div className="mt-4 h-40 animate-pulse rounded-3xl bg-muted" aria-hidden="true" />}
+      >
+        <PublicRoutinesSection />
+      </Suspense>
     </main>
   )
 }

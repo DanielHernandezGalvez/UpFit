@@ -4,19 +4,20 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { mapAuthError } from "@/features/auth/messages"
+import { resolveAuthOrigin } from "@/features/auth/origin"
 import type { AuthFormState } from "@/features/auth/types"
 import { createClient } from "@/lib/supabase/server"
 
 async function getOrigin() {
   const headerStore = await headers()
-  const origin = headerStore.get("origin")
-  if (origin) return origin
-
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host")
-  const proto = headerStore.get("x-forwarded-proto") ?? "http"
-  if (host) return `${proto}://${host}`
-
-  return "http://localhost:3000"
+  return resolveAuthOrigin({
+    origin: headerStore.get("origin"),
+    forwardedHost: headerStore.get("x-forwarded-host"),
+    host: headerStore.get("host"),
+    forwardedProto: headerStore.get("x-forwarded-proto"),
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    vercelProductionHost: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  })
 }
 
 function readEmail(formData: FormData) {

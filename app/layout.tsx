@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google"
 import { AppNav } from "@/components/app-nav"
 import { InstallPrompt } from "@/components/install-prompt"
 import { PwaRegister } from "@/components/pwa-register"
+import { accessTokenNeedsRefresh } from "@/lib/supabase/access-token"
 import { createClient } from "@/lib/supabase/server"
 import "./globals.css"
 
@@ -51,11 +52,15 @@ export default async function RootLayout({
   const {
     data: { session },
   } = await supabase.auth.getSession()
+  const signedIn = Boolean(
+    session?.access_token &&
+      !accessTokenNeedsRefresh(session.access_token, Math.floor(Date.now() / 1000)),
+  )
 
   return (
     <html lang="es" className={poppins.variable}>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        {session ? <AppNav /> : null}
+        {signedIn ? <AppNav /> : null}
         {children}
         <InstallPrompt />
         <PwaRegister />

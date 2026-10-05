@@ -37,7 +37,7 @@ Fuera de este alcance: editar o borrar series ya guardadas, gráficas, reordenar
 
 1. Copia `.env.example` a `.env.local` y completa la URL y la publishable key del proyecto de Supabase.
 2. En el SQL Editor de Supabase, ejecuta `supabase/migrations/20260925171800_init_schema.sql`.
-3. En **Authentication → URL Configuration**, agrega `http://localhost:3000/auth/callback` como Redirect URL.
+3. En **Authentication → URL Configuration** de Supabase, pon como Site URL `https://up-fit-eight.vercel.app`. En Redirect URLs agrega `https://up-fit-eight.vercel.app/auth/callback` y, para probar en local, `http://localhost:3000/auth/callback`. Si el Site URL queda en localhost, el correo de confirmación abre esa dirección.
 4. Instala y arranca:
 
 ```bash

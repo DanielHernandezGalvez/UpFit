@@ -58,11 +58,13 @@ Todas las tablas tienen RLS. La función de importar corre como `security define
 
 ## Funciones y dónde están
 
-**Acceso.** `features/auth/actions.ts` registra, entra, pide el correo de recuperación y cambia la contraseña. `features/auth/messages.ts` traduce los errores de Supabase.
+**Acceso.** `features/auth/actions.ts` registra, entra, pide el correo de recuperación y cambia la contraseña. El enlace del correo usa `NEXT_PUBLIC_SITE_URL` o el dominio de producción de Vercel, no localhost. `features/auth/messages.ts` traduce los errores de Supabase. `lib/supabase/proxy.ts` renueva la cookie solo cuando el token está por vencer. Si el inicio o el historial no pueden leer los datos, lo dicen en lugar de mostrar la lista vacía.
 
 **Inicio.** `features/dashboard/get-dashboard.ts` arma la semana, los días del año y las 5 mejores marcas. `features/dashboard/stats.ts` tiene esos cálculos, y ahí están sus pruebas. El resultado se guarda 60 segundos con la etiqueta `dashboard:<usuario>` y se invalida al guardar una serie o una rutina.
 
-**Rutinas.** `features/routines/routine-form.tsx` muestra, en este orden, lo que ya lleva la rutina, el alta de un ejercicio y el catálogo. Cada ejercicio elegido tiene el contador **Series guía**. `features/routines/actions.ts` guarda ese plan como `id:series`. `features/routines/share.ts` arma y normaliza el código. `features/routines/share-controls.tsx` muestra Compartir e Importar.
+**Rutinas.** `features/routines/routine-form.tsx` muestra, en este orden, lo que ya lleva la rutina, el alta de un ejercicio y el catálogo. Cada ejercicio elegido tiene el contador **Series guía**. `features/routines/actions.ts` guarda ese plan como `id:series`. `features/routines/share.ts` arma y normaliza el código. `features/routines/share-controls.tsx` muestra Compartir e Importar. `features/routines/publish-controls.tsx` publica o quita una rutina del catálogo.
+
+**Catálogo.** `20261005140000_public_routines.sql` crea `routine_publications`. Solo el dueño decide publicar. `list_public_routines` devuelve nombre, autor y ejercicios de otras personas, de 5 en 5. `copy_public_routine` copia la rutina a quien pulsa Agregar. En el inicio, debajo de las mejores marcas, `features/routines/public-routines-section.tsx` carga ese primer bloque aparte del resto de la pantalla. **Cargar más** pide las siguientes 5.
 
 **Entrenamiento.** `features/workouts/actions.ts` abre la sesión y copia los ejercicios a `session_exercises`. Guarda cada serie, cambia un ejercicio de esa sesión, agrega cardio y cierra. Al cerrar guarda los minutos. Si no hay series ni cardio, borra la sesión. El peso cambia de 1 kg. `features/workouts/exercise-logger.tsx` muestra la guía, las series de la vez pasada y el botón **Cambiar**. `features/workouts/session-extras.tsx` pide el tiempo y el cardio. `features/workouts/plan.ts` interpreta el plan, sugiere la serie que toca y limita series, minutos y tipos de cardio. La sugerencia sale de la última sesión de la misma rutina: la serie del mismo número, o la última si ya se pasaron.
 

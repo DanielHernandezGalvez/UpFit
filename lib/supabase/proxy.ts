@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { accessTokenNeedsRefresh } from "@/lib/supabase/access-token"
+
 const PUBLIC_PATHS = new Set([
   "/",
   "/auth/login",
@@ -54,11 +56,22 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  // getSession lee la cookie. getUser iría a la red en cada navegación.
+  // getSession lee la cookie. getUser solo corre si el token ya venció,
+  // para renovarlo y poder escribir la cookie nueva en esta respuesta.
   const {
     data: { session },
   } = await supabase.auth.getSession()
-  const user = session?.user ?? null
+  let user = session?.user ?? null
+
+  if (
+    accessTokenNeedsRefresh(
+      session?.access_token,
+      Math.floor(Date.now() / 1000),
+    )
+  ) {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  }
 
   const { pathname } = request.nextUrl
   let redirectPath: string | null = null

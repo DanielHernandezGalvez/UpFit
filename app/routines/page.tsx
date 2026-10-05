@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { PublishRoutineButton } from "@/features/routines/publish-controls"
 import { ImportRoutineForm, ShareRoutineButton } from "@/features/routines/share-controls"
 import { createClient } from "@/lib/supabase/server"
 
@@ -15,10 +16,15 @@ export default async function RoutinesPage() {
     redirect("/auth/login")
   }
 
-  const { data: routines } = await supabase
-    .from("routines")
-    .select("id, nombre, routine_exercises(id)")
-    .order("created_at", { ascending: true })
+  const [{ data: routines }, publications] = await Promise.all([
+    supabase
+      .from("routines")
+      .select("id, nombre, routine_exercises(id)")
+      .order("created_at", { ascending: true }),
+    supabase.from("routine_publications").select("routine_id"),
+  ])
+  const publishedIds = new Set((publications.data ?? []).map((item) => item.routine_id))
+  const canPublish = !publications.error
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pb-10">
@@ -54,6 +60,12 @@ export default async function RoutinesPage() {
                     </span>
                   </Link>
                   <ShareRoutineButton routineId={routine.id} />
+                  {canPublish ? (
+                    <PublishRoutineButton
+                      routineId={routine.id}
+                      published={publishedIds.has(routine.id)}
+                    />
+                  ) : null}
                 </div>
               </li>
             )

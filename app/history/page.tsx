@@ -42,13 +42,21 @@ async function HistoryList() {
     redirect("/auth/login")
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("workout_sessions")
     .select(
       "id, fecha, created_at, duracion_minutos, routines(nombre), session_sets(count), session_cardio(count)",
     )
     .order("fecha", { ascending: false })
     .order("created_at", { ascending: false })
+
+  if (error) {
+    return (
+      <p className="text-base leading-relaxed text-muted-foreground">
+        No pudimos cargar el historial. Recarga la página.
+      </p>
+    )
+  }
 
   const sessions = (data ?? []).filter(
     (session) =>

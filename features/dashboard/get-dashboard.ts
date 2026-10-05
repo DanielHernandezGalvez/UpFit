@@ -61,12 +61,23 @@ async function loadDashboard(userId: string, accessToken: string) {
     .slice(0, 5)
     .map(([id]) => id)
 
-  const { data: exercises } = topIds.length
+  const exercisesResult = topIds.length
     ? await supabase
         .from("exercises")
         .select("id, nombre, grupo_muscular")
         .in("id", topIds)
-    : { data: [] as ExerciseRow[] }
+    : { data: [] as ExerciseRow[], error: null }
+
+  if (
+    profileResult.error ||
+    sessionsResult.error ||
+    setsResult.error ||
+    exercisesResult.error
+  ) {
+    throw new Error("No se pudo cargar el inicio.")
+  }
+
+  const exercises = exercisesResult.data
 
   const byId = new Map(
     ((exercises ?? []) as ExerciseRow[]).map((exercise) => [exercise.id, exercise]),
@@ -100,7 +111,11 @@ async function loadDashboard(userId: string, accessToken: string) {
   }
 }
 
-export async function getDashboard() {
+export type DashboardResult =
+  | Awaited<ReturnType<typeof loadDashboard>>
+  | { unavailable: true }
+
+export async function getDashboard(): Promise<DashboardResult | null> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -112,11 +127,15 @@ export async function getDashboard() {
     data: { session },
   } = await supabase.auth.getSession()
 
-  if (!session?.access_token) return null
+  if (!session?.access_token) return { unavailable: true }
 
-  return unstable_cache(
-    () => loadDashboard(user.id, session.access_token),
-    ["dashboard", user.id],
-    { revalidate: 60, tags: [`dashboard:${user.id}`] },
-  )()
+  try {
+    return await unstable_cache(
+      () => loadDashboard(user.id, session.access_token),
+      ["dashboard", user.id],
+      { revalidate: 60, tags: [`dashboard:${user.id}`] },
+    )()
+  } catch {
+    return { unavailable: true }
+  }
 }
