@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { FormMessage } from "@/features/auth/form-message"
 import { formatKg } from "@/features/dashboard/stats"
-import { addSet, type AddSetState } from "@/features/workouts/actions"
+import { addSet, swapExercise, type AddSetState } from "@/features/workouts/actions"
+import { suggestionForSet } from "@/features/workouts/plan"
 
 type LoggedSet = {
   numero_serie: number
@@ -28,19 +29,25 @@ function changeWeight(peso: number, delta: number) {
 export function ExerciseLogger({
   sessionId,
   exerciseId,
+  orden,
   nombre,
   grupo,
   sets,
-  suggestedPeso,
-  suggestedReps,
+  seriesObjetivo,
+  previousSets,
+  catalog,
+  canChange,
 }: {
   sessionId: string
   exerciseId: string
+  orden: number
   nombre: string
   grupo: string | null
   sets: LoggedSet[]
-  suggestedPeso: number
-  suggestedReps: number
+  seriesObjetivo: number
+  previousSets: { peso: number; repeticiones: number }[]
+  catalog: { id: string; nombre: string }[]
+  canChange: boolean
 }) {
   const router = useRouter()
   const [state, formAction, pending] = useActionState<AddSetState, FormData>(
@@ -48,15 +55,18 @@ export function ExerciseLogger({
     null,
   )
   const lastSet = sets[sets.length - 1]
-  const [peso, setPeso] = useState(lastSet ? lastSet.peso : suggestedPeso)
-  const [reps, setReps] = useState(lastSet ? lastSet.repeticiones : suggestedReps)
+  const starting = suggestionForSet(previousSets, sets.length)
+  const [peso, setPeso] = useState(lastSet?.peso ?? starting?.peso ?? 20)
+  const [reps, setReps] = useState(lastSet?.repeticiones ?? starting?.repeticiones ?? 8)
+  const [changing, setChanging] = useState(false)
   const refreshedId = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!lastSet) return
-    setPeso(lastSet.peso)
-    setReps(lastSet.repeticiones)
-  }, [lastSet])
+    const next = suggestionForSet(previousSets, sets.length)
+    if (!next && !lastSet) return
+    setPeso(next?.peso ?? lastSet?.peso ?? 20)
+    setReps(next?.repeticiones ?? lastSet?.repeticiones ?? 8)
+  }, [sets.length])
 
   useEffect(() => {
     if (!state?.savedId || refreshedId.current === state.savedId) return
@@ -68,10 +78,51 @@ export function ExerciseLogger({
 
   return (
     <section className="flex flex-col gap-3 rounded-3xl border bg-card p-4 shadow-sm">
-      <div>
-        <h2 className="text-lg font-semibold">{nombre}</h2>
-        {grupo ? <p className="text-sm text-muted-foreground">{grupo}</p> : null}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">{nombre}</h2>
+          {grupo ? <p className="text-sm text-muted-foreground">{grupo}</p> : null}
+          <p className="mt-1 text-sm text-muted-foreground">
+            Guía de {seriesObjetivo} {seriesObjetivo === 1 ? "serie" : "series"}. Llevas{" "}
+            {sets.length}. Puedes hacer más o menos.
+          </p>
+        </div>
+        {canChange ? (
+          <Button type="button" variant="ghost" onClick={() => setChanging((open) => !open)}>
+            Cambiar
+          </Button>
+        ) : null}
       </div>
+      {changing && canChange ? (
+        <form action={swapExercise} className="flex flex-col gap-2">
+          <input type="hidden" name="sessionId" value={sessionId} />
+          <input type="hidden" name="orden" value={orden} />
+          <ul className="flex max-h-48 flex-col gap-2 overflow-auto">
+            {catalog
+              .filter((item) => item.id !== exerciseId)
+              .map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="submit"
+                    name="exerciseId"
+                    value={item.id}
+                    className="h-12 w-full rounded-full border px-4 text-left text-sm"
+                  >
+                    {item.nombre}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </form>
+      ) : null}
+      {previousSets.length > 0 ? (
+        <p className="text-sm text-muted-foreground">
+          La vez pasada:{" "}
+          {previousSets
+            .map((set) => `${formatAmount(set.peso)}×${set.repeticiones}`)
+            .join(", ")}
+        </p>
+      ) : null}
 
       {sets.length > 0 ? (
         <ul className="flex flex-col gap-2">

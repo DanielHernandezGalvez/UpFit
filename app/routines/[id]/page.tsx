@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
 import { RoutineForm } from "@/features/routines/routine-form"
+import { ShareRoutineButton } from "@/features/routines/share-controls"
 import type { ExerciseOption } from "@/features/routines/types"
 
 export default async function EditRoutinePage({
@@ -24,7 +25,7 @@ export default async function EditRoutinePage({
   const [{ data: routine }, { data: catalog }] = await Promise.all([
     supabase
       .from("routines")
-      .select("id, nombre, routine_exercises(exercise_id, orden)")
+      .select("id, nombre, routine_exercises(exercise_id, orden, series_objetivo)")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("exercises").select("id, nombre, grupo_muscular").order("nombre"),
@@ -46,9 +47,12 @@ export default async function EditRoutinePage({
       : [],
   )
 
-  const initialExerciseIds = [...(routine.routine_exercises ?? [])]
+  const initialPlan = [...(routine.routine_exercises ?? [])]
     .sort((a, b) => a.orden - b.orden)
-    .map((item) => item.exercise_id)
+    .map((item) => ({
+      id: item.exercise_id,
+      series: item.series_objetivo ?? 3,
+    }))
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-8 pb-40 md:max-w-3xl md:pb-28">
@@ -61,10 +65,13 @@ export default async function EditRoutinePage({
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight">Editar rutina</h1>
       </header>
+      <div className="mb-6">
+        <ShareRoutineButton routineId={routine.id} />
+      </div>
       <RoutineForm
         routineId={routine.id}
         initialName={routine.nombre}
-        initialExerciseIds={initialExerciseIds}
+        initialPlan={initialPlan}
         exercises={exercises}
       />
     </main>

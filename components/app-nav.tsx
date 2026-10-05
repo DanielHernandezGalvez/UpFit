@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CalendarDays, Dumbbell, House, Play } from "lucide-react"
+import { CalendarDays, Dumbbell, House, Play, Scale } from "lucide-react"
 
 const items = [
   { href: "/", label: "Inicio", icon: House },
   { href: "/routines", label: "Rutinas", icon: Dumbbell },
   { href: "/workout", label: "Iniciar", icon: Play },
   { href: "/history", label: "Historial", icon: CalendarDays },
+  { href: "/medidas", label: "Medidas", icon: Scale },
 ] as const
 
 function isActive(pathname: string, href: string) {

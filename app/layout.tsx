@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next"
 import { Poppins } from "next/font/google"
 
 import { AppNav } from "@/components/app-nav"
+import { InstallPrompt } from "@/components/install-prompt"
 import { PwaRegister } from "@/components/pwa-register"
+import { createClient } from "@/lib/supabase/server"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -40,16 +42,22 @@ export const viewport: Viewport = {
   colorScheme: "light",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = await createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   return (
     <html lang="es" className={poppins.variable}>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        <AppNav />
+        {session ? <AppNav /> : null}
         {children}
+        <InstallPrompt />
         <PwaRegister />
       </body>
     </html>

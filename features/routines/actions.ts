@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
+import { createShareCode, normalizeShareCode } from "@/features/routines/share"
+import { parseExercisePlan } from "@/features/workouts/plan"
 import type { ExerciseOption, RoutineFormState } from "@/features/routines/types"
 import { revalidateUserViews } from "@/lib/revalidate-user"
 import { createClient } from "@/lib/supabase/server"
@@ -26,19 +28,6 @@ async function requireUser() {
 
 function cleanName(value: string) {
   return value.trim().replace(/\s+/g, " ")
-}
-
-function readExerciseIds(formData: FormData) {
-  const seen = new Set<string>()
-
-  return String(formData.get("exerciseIds") ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => {
-      if (!UUID_PATTERN.test(id) || seen.has(id)) return false
-      seen.add(id)
-      return true
-    })
 }
 
 export async function createExercise(input: {
@@ -108,13 +97,13 @@ export async function saveRoutine(
 ): Promise<RoutineFormState> {
   const nombre = cleanName(String(formData.get("nombre") ?? ""))
   const routineId = String(formData.get("routineId") ?? "").trim()
-  const exerciseIds = readExerciseIds(formData)
+  const exercisePlan = parseExercisePlan(String(formData.get("exercisePlan") ?? ""))
 
   if (nombre.length === 0 || nombre.length > 80) {
     return { error: "Escribe el nombre de la rutina." }
   }
 
-  if (exerciseIds.length === 0) {
+  if (exercisePlan.length === 0) {
     return { error: "Agrega al menos un ejercicio." }
   }
 
@@ -161,10 +150,11 @@ export async function saveRoutine(
   }
 
   const { error: insertError } = await supabase.from("routine_exercises").insert(
-    exerciseIds.map((exerciseId, index) => ({
+    exercisePlan.map((item, index) => ({
       routine_id: id,
-      exercise_id: exerciseId,
+      exercise_id: item.id,
       orden: index + 1,
+      series_objetivo: item.series,
     })),
   )
 
@@ -180,4 +170,59 @@ export async function saveRoutine(
   revalidatePath("/workout")
   revalidateUserViews(user.id)
   return { redirectTo: "/routines" }
+}
+
+export async function shareRoutine(
+  routineId: string,
+): Promise<{ code: string } | { error: string }> {
+  if (!UUID_PATTERN.test(routineId)) {
+    return { error: "No encontramos esa rutina." }
+  }
+
+  const { supabase, user } = await requireUser()
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = createShareCode()
+    const { error } = await supabase.from("routine_shares").insert({
+      code,
+      routine_id: routineId,
+      owner_id: user.id,
+    })
+
+    if (!error) return { code }
+    if (error.code !== "23505") {
+      return { error: "No se pudo compartir la rutina. Aplica la migración nueva en Supabase." }
+    }
+  }
+
+  return { error: "No se pudo crear el código. Inténtalo de nuevo." }
+}
+
+export async function importRoutine(
+  _previous: RoutineFormState,
+  formData: FormData,
+): Promise<RoutineFormState> {
+  const code = normalizeShareCode(String(formData.get("code") ?? ""))
+
+  if (code.length !== 8) {
+    return { error: "El código tiene 8 caracteres." }
+  }
+
+  const { supabase } = await requireUser()
+  const { data, error } = await supabase.rpc("import_shared_routine", {
+    share_code: code,
+  })
+
+  if (error || !data) {
+    if (error?.message.includes("own routine")) {
+      return { error: "Esa rutina ya es tuya." }
+    }
+    if (error?.message.includes("code not found")) {
+      return { error: "No encontramos ese código." }
+    }
+    return { error: "No se pudo importar la rutina." }
+  }
+
+  revalidatePath("/routines")
+  return { redirectTo: `/routines/${data}` }
 }

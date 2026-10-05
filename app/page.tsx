@@ -1,10 +1,10 @@
 import { Suspense } from "react"
-import { redirect } from "next/navigation"
 import { Check, Flame, LogOut, Trophy } from "lucide-react"
 
 import { logout } from "@/features/auth/actions"
 import { formatKg } from "@/features/dashboard/stats"
 import { getDashboard } from "@/features/dashboard/get-dashboard"
+import { LandingPage } from "@/features/landing/landing-page"
 
 function initials(nombre: string) {
   const parts = nombre.trim().split(/\s+/).filter(Boolean)
@@ -29,11 +29,15 @@ function HomeFallback() {
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
-      <Suspense fallback={<HomeFallback />}>
-        <HomeContent />
-      </Suspense>
-    </main>
+    <Suspense
+      fallback={
+        <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
+          <HomeFallback />
+        </main>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   )
 }
 
@@ -41,11 +45,11 @@ async function HomeContent() {
   const dashboard = await getDashboard()
 
   if (!dashboard) {
-    redirect("/auth/login")
+    return <LandingPage />
   }
 
   return (
-    <>
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-24 md:max-w-3xl md:pt-8 md:pb-10">
       <header className="flex items-center gap-3">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
           {initials(dashboard.nombre)}
@@ -162,6 +166,6 @@ async function HomeContent() {
           </ol>
         )}
       </section>
-    </>
+    </main>
   )
 }

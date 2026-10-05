@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { ImportRoutineForm, ShareRoutineButton } from "@/features/routines/share-controls"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function RoutinesPage() {
@@ -28,6 +29,8 @@ export default async function RoutinesPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Rutinas</h1>
       </header>
 
+      <ImportRoutineForm />
+
       {!routines?.length ? (
         <p className="text-base leading-relaxed text-muted-foreground">
           Crea la primera con un nombre y los ejercicios que vas a hacer.
@@ -41,17 +44,17 @@ export default async function RoutinesPage() {
 
             return (
               <li key={routine.id}>
-                <Link
-                  href={`/routines/${routine.id}`}
-                  className="flex min-h-16 items-center justify-between gap-3 rounded-3xl border bg-card px-4 py-4 shadow-sm"
-                >
-                  <span className="truncate text-base font-medium">
-                    {routine.nombre}
-                  </span>
-                  <span className="shrink-0 text-sm text-muted-foreground">
-                    {detail}
-                  </span>
-                </Link>
+                <div className="flex flex-col gap-3 rounded-3xl border bg-card px-4 py-4 shadow-sm">
+                  <Link href={`/routines/${routine.id}`} className="flex min-h-12 items-center justify-between gap-3">
+                    <span className="truncate text-base font-medium">
+                      {routine.nombre}
+                    </span>
+                    <span className="shrink-0 text-sm text-muted-foreground">
+                      {detail}
+                    </span>
+                  </Link>
+                  <ShareRoutineButton routineId={routine.id} />
+                </div>
               </li>
             )
           })}

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { isoDate } from "@/features/dashboard/stats"
+import { isCardioOption } from "@/features/workouts/plan"
 import { revalidateUserViews } from "@/lib/revalidate-user"
 import { createClient } from "@/lib/supabase/server"
 
@@ -52,6 +53,23 @@ export async function startWorkout(formData: FormData) {
 
   if (error || !data) {
     redirect("/workout")
+  }
+
+  const { data: planned } = await supabase
+    .from("routine_exercises")
+    .select("exercise_id, orden, series_objetivo")
+    .eq("routine_id", routineId)
+    .order("orden")
+
+  if (planned?.length) {
+    await supabase.from("session_exercises").insert(
+      planned.map((item) => ({
+        session_id: data.id,
+        exercise_id: item.exercise_id,
+        orden: item.orden,
+        series_objetivo: item.series_objetivo ?? 3,
+      })),
+    )
   }
 
   redirect(`/workout/${data.id}`)
@@ -135,14 +153,100 @@ export async function finishWorkout(formData: FormData) {
     .eq("session_id", sessionId)
     .limit(1)
 
-  if (!sets?.length) {
+  const { data: cardio } = await supabase
+    .from("session_cardio")
+    .select("id")
+    .eq("session_id", sessionId)
+    .limit(1)
+
+  if (!sets?.length && !cardio?.length) {
     await supabase.from("workout_sessions").delete().eq("id", sessionId)
     revalidateUserViews(user.id)
     redirect("/")
+  }
+
+  const duracion = Number(formData.get("duracionMinutos"))
+  if (Number.isInteger(duracion) && duracion >= 1 && duracion <= 300) {
+    await supabase
+      .from("workout_sessions")
+      .update({ duracion_minutos: duracion })
+      .eq("id", sessionId)
   }
 
   revalidatePath("/")
   revalidatePath("/history")
   revalidateUserViews(user.id)
   redirect("/")
+}
+
+export async function swapExercise(formData: FormData) {
+  const sessionId = String(formData.get("sessionId") ?? "")
+  const orden = Number(formData.get("orden"))
+  const exerciseId = String(formData.get("exerciseId") ?? "")
+
+  if (!UUID_PATTERN.test(sessionId) || !UUID_PATTERN.test(exerciseId) || !Number.isInteger(orden)) {
+    redirect(`/workout/${sessionId}`)
+  }
+
+  const { supabase } = await requireUser()
+  const { data: current } = await supabase
+    .from("session_exercises")
+    .select("exercise_id")
+    .eq("session_id", sessionId)
+    .eq("orden", orden)
+    .maybeSingle()
+
+  if (!current || current.exercise_id === exerciseId) {
+    redirect(`/workout/${sessionId}`)
+  }
+
+  const { data: taken } = await supabase
+    .from("session_exercises")
+    .select("orden")
+    .eq("session_id", sessionId)
+    .eq("exercise_id", exerciseId)
+    .maybeSingle()
+
+  if (taken) {
+    redirect(`/workout/${sessionId}?aviso=repetido`)
+  }
+
+  await supabase
+    .from("session_sets")
+    .update({ exercise_id: exerciseId })
+    .eq("session_id", sessionId)
+    .eq("exercise_id", current.exercise_id)
+
+  await supabase
+    .from("session_exercises")
+    .update({ exercise_id: exerciseId })
+    .eq("session_id", sessionId)
+    .eq("orden", orden)
+
+  revalidatePath(`/workout/${sessionId}`)
+  redirect(`/workout/${sessionId}`)
+}
+
+export async function addCardio(formData: FormData) {
+  const sessionId = String(formData.get("sessionId") ?? "")
+  const tipo = String(formData.get("tipo") ?? "")
+  const minutos = Number(formData.get("minutos"))
+
+  if (!UUID_PATTERN.test(sessionId) || !isCardioOption(tipo)) {
+    redirect(`/workout/${sessionId}`)
+  }
+
+  if (!Number.isInteger(minutos) || minutos < 1 || minutos > 300) {
+    redirect(`/workout/${sessionId}`)
+  }
+
+  const { supabase } = await requireUser()
+  await supabase.from("session_cardio").insert({
+    session_id: sessionId,
+    tipo,
+    minutos,
+  })
+
+  revalidatePath(`/workout/${sessionId}`)
+  redirect(`/workout/${sessionId}`)
 }

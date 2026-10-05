@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
-import { finishWorkout } from "@/features/workouts/actions"
 import { ExerciseLogger } from "@/features/workouts/exercise-logger"
+import { SessionExtras } from "@/features/workouts/session-extras"
 import { formatSessionDate } from "@/features/history/format"
 import { isMuscleGroup } from "@/features/routines/muscle-groups"
 import { createClient } from "@/lib/supabase/server"
@@ -31,10 +30,13 @@ function one<T>(value: T | T[] | null): T | null {
 
 export default async function WorkoutSessionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sessionId: string }>
+  searchParams: Promise<{ aviso?: string }>
 }) {
   const { sessionId } = await params
+  const { aviso } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -46,7 +48,7 @@ export default async function WorkoutSessionPage({
 
   const { data: session } = await supabase
     .from("workout_sessions")
-    .select("id, fecha, routine_id, routines(nombre)")
+    .select("id, fecha, created_at, routine_id, routines(nombre)")
     .eq("id", sessionId)
     .maybeSingle()
 
@@ -55,13 +57,22 @@ export default async function WorkoutSessionPage({
   }
 
   const routine = one(session.routines as RoutineEmbed)
-  const { data: routineExercises } = session.routine_id
-    ? await supabase
-        .from("routine_exercises")
-        .select("orden, exercise_id, exercises(nombre, grupo_muscular)")
-        .eq("routine_id", session.routine_id)
-        .order("orden")
-    : { data: [] }
+  const { data: sessionPlan } = await supabase
+    .from("session_exercises")
+    .select("orden, exercise_id, series_objetivo, exercises(nombre, grupo_muscular)")
+    .eq("session_id", sessionId)
+    .order("orden")
+
+  const { data: routineExercises } =
+    sessionPlan?.length || !session.routine_id
+      ? { data: [] }
+      : await supabase
+          .from("routine_exercises")
+          .select("orden, exercise_id, series_objetivo, exercises(nombre, grupo_muscular)")
+          .eq("routine_id", session.routine_id)
+          .order("orden")
+
+  const planned = (sessionPlan?.length ? sessionPlan : routineExercises) ?? []
 
   const { data: setRows } = await supabase
     .from("session_sets")
@@ -70,12 +81,14 @@ export default async function WorkoutSessionPage({
     .order("numero_serie")
 
   const sets = (setRows ?? []) as (SetRow & { created_at: string })[]
-  const exercises = (routineExercises ?? []).flatMap((item) => {
+  const exercises = planned.flatMap((item) => {
     const exercise = one(item.exercises as ExerciseEmbed)
     if (!exercise) return []
     return [
       {
         id: item.exercise_id,
+        orden: item.orden,
+        seriesObjetivo: item.series_objetivo ?? 3,
         nombre: exercise.nombre,
         grupo: isMuscleGroup(exercise.grupo_muscular)
           ? exercise.grupo_muscular
@@ -84,23 +97,44 @@ export default async function WorkoutSessionPage({
     ]
   })
 
-  const exerciseIds = exercises.map((exercise) => exercise.id)
-  const { data: historyRows } = exerciseIds.length
-    ? await supabase
-        .from("session_sets")
-        .select("exercise_id, peso, repeticiones, created_at")
-        .in("exercise_id", exerciseIds)
-        .order("created_at", { ascending: false })
-        .limit(40)
-    : { data: [] }
+  const { data: catalogRows } = await supabase
+    .from("exercises")
+    .select("id, nombre")
+    .order("nombre")
+  const catalog = catalogRows ?? []
 
-  const suggestions = new Map<string, { peso: number; repeticiones: number }>()
-  for (const row of historyRows ?? []) {
-    if (suggestions.has(row.exercise_id)) continue
-    suggestions.set(row.exercise_id, {
-      peso: Number(row.peso),
-      repeticiones: row.repeticiones,
-    })
+  const { data: cardioRows } = await supabase
+    .from("session_cardio")
+    .select("id, tipo, minutos")
+    .eq("session_id", sessionId)
+    .order("created_at")
+
+  const previousByExercise = new Map<string, { peso: number; repeticiones: number }[]>()
+  if (session.routine_id) {
+    const { data: previousSessions } = await supabase
+      .from("workout_sessions")
+      .select("id")
+      .eq("routine_id", session.routine_id)
+      .neq("id", sessionId)
+      .order("fecha", { ascending: false })
+      .limit(5)
+    const previousIds = (previousSessions ?? []).map((item) => item.id)
+    const { data: previousRows } = previousIds.length
+      ? await supabase
+          .from("session_sets")
+          .select("session_id, exercise_id, numero_serie, peso, repeticiones")
+          .in("session_id", previousIds)
+          .order("numero_serie")
+      : { data: [] }
+    const newestSessionId = previousIds.find((id) =>
+      (previousRows ?? []).some((row) => row.session_id === id),
+    )
+    for (const row of previousRows ?? []) {
+      if (row.session_id !== newestSessionId) continue
+      const list = previousByExercise.get(row.exercise_id) ?? []
+      list.push({ peso: Number(row.peso), repeticiones: row.repeticiones })
+      previousByExercise.set(row.exercise_id, list)
+    }
   }
 
   return (
@@ -112,6 +146,9 @@ export default async function WorkoutSessionPage({
         <h1 className="text-3xl font-semibold tracking-tight">
           {routine?.nombre ?? "Entrenamiento"}
         </h1>
+        {aviso === "repetido" ? (
+          <p className="text-sm text-destructive">Ese ejercicio ya está en la rutina.</p>
+        ) : null}
       </header>
 
       {exercises.length === 0 ? (
@@ -127,29 +164,29 @@ export default async function WorkoutSessionPage({
               peso: Number(set.peso),
               repeticiones: set.repeticiones,
             }))
-          const suggestion = suggestions.get(exercise.id)
-
           return (
             <ExerciseLogger
-              key={exercise.id}
+              key={`${exercise.orden}-${exercise.id}`}
               sessionId={session.id}
               exerciseId={exercise.id}
+              orden={exercise.orden}
               nombre={exercise.nombre}
               grupo={exercise.grupo}
               sets={logged}
-              suggestedPeso={suggestion?.peso ?? 20}
-              suggestedReps={suggestion?.repeticiones ?? 8}
+              seriesObjetivo={exercise.seriesObjetivo}
+              previousSets={previousByExercise.get(exercise.id) ?? []}
+              catalog={catalog}
+              canChange={Boolean(sessionPlan?.length)}
             />
           )
         })
       )}
 
-      <form action={finishWorkout} className="mt-2">
-        <input type="hidden" name="sessionId" value={session.id} />
-        <Button type="submit" variant="outline" size="touch" className="w-full">
-          Finalizar sesión
-        </Button>
-      </form>
+      <SessionExtras
+        sessionId={session.id}
+        createdAt={session.created_at}
+        cardio={cardioRows ?? []}
+      />
     </main>
   )
 }

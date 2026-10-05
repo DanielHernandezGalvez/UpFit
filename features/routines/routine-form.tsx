@@ -10,16 +10,17 @@ import { useAuthRedirect } from "@/features/auth/use-auth-redirect"
 import { createExercise, saveRoutine } from "@/features/routines/actions"
 import { MUSCLE_GROUPS, type MuscleGroup } from "@/features/routines/muscle-groups"
 import type { ExerciseOption, RoutineFormState } from "@/features/routines/types"
+import { clampSeries } from "@/features/workouts/plan"
 
 export function RoutineForm({
   routineId,
   initialName = "",
-  initialExerciseIds = [],
+  initialPlan = [],
   exercises: initialExercises,
 }: {
   routineId?: string
   initialName?: string
-  initialExerciseIds?: string[]
+  initialPlan?: { id: string; series: number }[]
   exercises: ExerciseOption[]
 }) {
   const [state, formAction, pending] = useActionState<RoutineFormState, FormData>(
@@ -29,16 +30,16 @@ export function RoutineForm({
   useAuthRedirect(state)
   const [nombre, setNombre] = useState(initialName)
   const [exercises, setExercises] = useState(initialExercises)
-  const [selectedIds, setSelectedIds] = useState(initialExerciseIds)
+  const [selected, setSelected] = useState(initialPlan)
   const [query, setQuery] = useState("")
   const [newName, setNewName] = useState("")
   const [grupo, setGrupo] = useState<MuscleGroup>("Pecho")
   const [adding, setAdding] = useState(false)
   const [localError, setLocalError] = useState<string>()
 
-  const selected = selectedIds.flatMap((id) => {
-    const exercise = exercises.find((item) => item.id === id)
-    return exercise ? [exercise] : []
+  const selectedExercises = selected.flatMap((item) => {
+    const exercise = exercises.find((entry) => entry.id === item.id)
+    return exercise ? [{ ...exercise, series: item.series }] : []
   })
 
   const filtered = useMemo(() => {
@@ -55,10 +56,18 @@ export function RoutineForm({
   }, [exercises, query])
 
   function toggleExercise(id: string) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
+    setSelected((current) =>
+      current.some((item) => item.id === id)
+        ? current.filter((item) => item.id !== id)
+        : [...current, { id, series: 3 }],
+    )
+  }
+
+  function changeSeries(id: string, delta: number) {
+    setSelected((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, series: clampSeries(item.series + delta) } : item,
+      ),
     )
   }
 
@@ -81,10 +90,10 @@ export function RoutineForm({
         ? current
         : [...current, result.exercise],
     )
-    setSelectedIds((current) =>
-      current.includes(result.exercise.id)
+    setSelected((current) =>
+      current.some((item) => item.id === result.exercise.id)
         ? current
-        : [...current, result.exercise.id],
+        : [...current, { id: result.exercise.id, series: 3 }],
     )
     setNewName("")
   }
@@ -95,13 +104,17 @@ export function RoutineForm({
         error={
           localError ??
           (state?.error === "Agrega al menos un ejercicio." &&
-          selectedIds.length > 0
+          selected.length > 0
             ? undefined
             : state?.error)
         }
       />
       {routineId ? <input type="hidden" name="routineId" value={routineId} /> : null}
-      <input type="hidden" name="exerciseIds" value={selectedIds.join(",")} />
+      <input
+        type="hidden"
+        name="exercisePlan"
+        value={selected.map((item) => `${item.id}:${item.series}`).join(",")}
+      />
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="nombre">Nombre</Label>
@@ -118,30 +131,58 @@ export function RoutineForm({
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">En esta rutina</h2>
-        {selected.length === 0 ? (
+        {selectedExercises.length === 0 ? (
           <p className="text-base text-muted-foreground">
             Todavía no agregas ejercicios.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {selected.map((exercise) => (
+            {selectedExercises.map((exercise) => (
               <li
                 key={exercise.id}
-                className="flex items-center gap-3 rounded-xl border px-4 py-3"
+                className="flex flex-col gap-3 rounded-xl border px-4 py-3"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-medium">{exercise.nombre}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {exercise.grupo_muscular}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-medium">{exercise.nombre}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {exercise.grupo_muscular}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => toggleExercise(exercise.id)}
+                  >
+                    Quitar
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => toggleExercise(exercise.id)}
-                >
-                  Quitar
-                </Button>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">Series guía</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label={`Menos series de ${exercise.nombre}`}
+                      onClick={() => changeSeries(exercise.id, -1)}
+                    >
+                      −
+                    </Button>
+                    <span className="w-6 text-center font-semibold tabular-nums">
+                      {exercise.series}
+                    </span>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label={`Más series de ${exercise.nombre}`}
+                      onClick={() => changeSeries(exercise.id, 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -209,7 +250,7 @@ export function RoutineForm({
         ) : (
           <ul className="flex flex-col gap-2">
             {filtered.map((exercise) => {
-              const added = selectedIds.includes(exercise.id)
+              const added = selected.some((item) => item.id === exercise.id)
               return (
                 <li key={exercise.id}>
                   <button

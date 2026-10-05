@@ -31,7 +31,7 @@ export default async function HistoryDetailPage({
 
   const { data: session } = await supabase
     .from("workout_sessions")
-    .select("id, fecha, routines(nombre)")
+    .select("id, fecha, duracion_minutos, routines(nombre)")
     .eq("id", id)
     .maybeSingle()
 
@@ -72,6 +72,12 @@ export default async function HistoryDetailPage({
     group.sets.sort((a, b) => a.numero_serie - b.numero_serie)
   }
 
+  const { data: cardioRows } = await supabase
+    .from("session_cardio")
+    .select("id, tipo, minutos")
+    .eq("session_id", id)
+    .order("created_at")
+
   const routine = oneName(session.routines as RoutineEmbed)
 
   return (
@@ -88,6 +94,7 @@ export default async function HistoryDetailPage({
         </h1>
         <p className="text-base text-muted-foreground">
           {formatSessionDate(session.fecha)}
+          {session.duracion_minutos ? ` · ${session.duracion_minutos} min` : ""}
         </p>
       </header>
 
@@ -115,6 +122,20 @@ export default async function HistoryDetailPage({
           </section>
         ))
       )}
+
+      {(cardioRows ?? []).length > 0 ? (
+        <section className="rounded-3xl border bg-card p-4 shadow-sm">
+          <h2 className="text-lg font-semibold">Cardio</h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {(cardioRows ?? []).map((item) => (
+              <li key={item.id} className="flex items-center justify-between text-base">
+                <span>{item.tipo}</span>
+                <span className="font-semibold">{item.minutos} min</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   )
 }

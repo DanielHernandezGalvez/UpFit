@@ -44,12 +44,16 @@ async function HistoryList() {
 
   const { data } = await supabase
     .from("workout_sessions")
-    .select("id, fecha, created_at, routines(nombre), session_sets(count)")
+    .select(
+      "id, fecha, created_at, duracion_minutos, routines(nombre), session_sets(count), session_cardio(count)",
+    )
     .order("fecha", { ascending: false })
     .order("created_at", { ascending: false })
 
   const sessions = (data ?? []).filter(
-    (session) => embeddedCount(session.session_sets) > 0,
+    (session) =>
+      embeddedCount(session.session_sets) > 0 ||
+      embeddedCount(session.session_cardio) > 0,
   )
 
   return (
@@ -64,7 +68,13 @@ async function HistoryList() {
           {sessions.map((session) => {
             const nombre = routineName(session.routines as RoutineEmbed)
             const count = embeddedCount(session.session_sets)
-            const detail = count === 1 ? "1 serie" : `${count} series`
+            const detail = [
+              count === 1 ? "1 serie" : count > 1 ? `${count} series` : null,
+              session.duracion_minutos ? `${session.duracion_minutos} min` : null,
+              count === 0 ? "Cardio" : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")
 
             return (
               <li key={session.id}>
