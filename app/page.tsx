@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { Check, Flame, LogOut, Trophy } from "lucide-react"
 
 import { logout } from "@/features/auth/actions"
-import { formatKg } from "@/features/dashboard/stats"
+import { formatKg, isoDate } from "@/features/dashboard/stats"
 import { getDashboard } from "@/features/dashboard/get-dashboard"
 import { LandingPage } from "@/features/landing/landing-page"
 import { PublicRoutinesSection } from "@/features/routines/public-routines-section"
@@ -60,6 +60,8 @@ async function HomeContent() {
     )
   }
 
+  const todayIso = isoDate(new Date())
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pt-8 md:pb-10">
       <header className="flex items-center gap-3">
@@ -68,7 +70,7 @@ async function HomeContent() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-            Upfit
+            Fitrapp
           </p>
           <h1 className="truncate text-2xl font-semibold tracking-tight">
             Hola, {dashboard.nombre}
@@ -77,10 +79,10 @@ async function HomeContent() {
         <form action={logout}>
           <button
             type="submit"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground"
+            aria-label="Salir"
+            className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
           >
-            Salir
-            <LogOut className="size-4" />
+            <LogOut className="size-5" />
           </button>
         </form>
       </header>
@@ -108,7 +110,13 @@ async function HomeContent() {
         <ol className="mt-5 grid grid-cols-7 gap-1">
           {dashboard.weekDays.map((day) => (
             <li key={day.iso} className="flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span
+                className={
+                  day.iso === todayIso
+                    ? "text-xs font-semibold text-foreground"
+                    : "text-xs font-medium text-muted-foreground"
+                }
+              >
                 {day.label}
               </span>
               <span

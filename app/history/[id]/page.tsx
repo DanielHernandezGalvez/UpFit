@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { formatKg } from "@/features/dashboard/stats"
 import { formatSessionDate } from "@/features/history/format"
+import { SavedSetEditor } from "@/features/workouts/exercise-logger"
 import { getRequestAuth } from "@/lib/supabase/request-auth"
 
 type RoutineEmbed = { nombre: string } | { nombre: string }[] | null
@@ -78,7 +78,7 @@ export default async function HistoryDetailPage({
   const routine = oneName(session.routines as RoutineEmbed)
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-24 md:max-w-3xl md:pb-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pb-10">
       <header className="space-y-1">
         <Link
           href="/history"
@@ -103,17 +103,14 @@ export default async function HistoryDetailPage({
             <h2 className="text-lg font-semibold">{group.nombre}</h2>
             <ul className="mt-3 flex flex-col gap-2">
               {group.sets.map((set) => (
-                <li
+                <SavedSetEditor
                   key={set.numero_serie}
-                  className="flex items-center justify-between text-base"
-                >
-                  <span className="text-muted-foreground">
-                    Serie {set.numero_serie}
-                  </span>
-                  <span className="font-semibold">
-                    {formatKg(set.peso)} × {set.repeticiones}
-                  </span>
-                </li>
+                  sessionId={id}
+                  exerciseId={group.exerciseId}
+                  numeroSerie={set.numero_serie}
+                  peso={set.peso}
+                  repeticiones={set.repeticiones}
+                />
               ))}
             </ul>
           </section>

@@ -1,6 +1,6 @@
-# Documentación del código de Upfit
+# Documentación del código de Fitrapp
 
-Upfit es una PWA de un solo usuario para anotar entrenamientos. Next.js pinta las pantallas. Supabase guarda los datos y aplica las reglas de acceso. No hay un API propio: las pantallas leen y escriben Postgres con la publishable key, y Row Level Security limita cada fila a su dueño.
+Fitrapp es una PWA de un solo usuario para anotar entrenamientos. Next.js pinta las pantallas. Supabase guarda los datos y aplica las reglas de acceso. No hay un API propio: las pantallas leen y escriben Postgres con la publishable key, y Row Level Security limita cada fila a su dueño.
 
 ## Cómo está organizado
 
@@ -23,7 +23,7 @@ Las pantallas autenticadas viven en `app/`. El acceso vive en `app/auth/`.
 | `/` | Todos | Portada si no hay sesión. Inicio si ya entró. |
 | `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, `/auth/update-password` | Público | Cuenta, entrada y contraseña nueva. |
 | `/auth/callback` | Público | Canjea el código del correo de Supabase. |
-| `/routines`, `/routines/new`, `/routines/[id]` | Sesión | Lista, alta y edición de rutinas. |
+| `/routines`, `/routines/new`, `/routines/[id]`, `/datos` | Sesión | Lista, alta, edición y rutinas generadas con los datos de la persona. |
 | `/workout`, `/workout/[sessionId]` | Sesión | Elegir rutina, anotar series, cardio y tiempo. |
 | `/history`, `/history/[id]` | Sesión | Sesiones pasadas, con series, cardio y duración. |
 | `/medidas` | Sesión | Peso y medidas, opcionales. |
@@ -62,11 +62,11 @@ Todas las tablas tienen RLS. La función de importar corre como `security define
 
 **Inicio.** `features/dashboard/get-dashboard.ts` arma la semana, los días del año y las 5 mejores marcas. `features/dashboard/stats.ts` tiene esos cálculos, y ahí están sus pruebas. El resultado se guarda 60 segundos con la etiqueta `dashboard:<usuario>` y se invalida al guardar una serie o una rutina.
 
-**Rutinas.** `features/routines/routine-form.tsx` muestra, en este orden, lo que ya lleva la rutina, el alta de un ejercicio y el catálogo. Cada ejercicio elegido tiene el contador **Series guía**. `features/routines/actions.ts` guarda ese plan como `id:series`. `features/routines/share.ts` arma y normaliza el código. `features/routines/share-controls.tsx` muestra Compartir e Importar. `features/routines/publish-controls.tsx` publica o quita una rutina del catálogo.
+**Rutinas.** `features/routines/routine-form.tsx` muestra, en este orden, lo que ya lleva la rutina, el alta de un ejercicio y el catálogo. Cada ejercicio elegido tiene el contador **Series guía**. `features/routines/actions.ts` guarda ese plan como `id:series`. `features/routines/share.ts` arma y normaliza el código. `features/routines/share-controls.tsx` muestra Compartir e Importar. `features/routines/publish-controls.tsx` publica o quita una rutina del catálogo. `features/routines/generate.ts` arma rutinas a partir del objetivo, el nivel, los días y el enfoque. La pantalla está en `/datos`.
 
 **Catálogo.** `20261005140000_public_routines.sql` crea `routine_publications`. Solo el dueño decide publicar. `list_public_routines` devuelve nombre, autor y ejercicios de otras personas, de 5 en 5. `copy_public_routine` copia la rutina a quien pulsa Agregar. En el inicio, debajo de las mejores marcas, `features/routines/public-routines-section.tsx` carga ese primer bloque aparte del resto de la pantalla. **Cargar más** pide las siguientes 5.
 
-**Entrenamiento.** `features/workouts/actions.ts` abre la sesión y copia los ejercicios a `session_exercises`. Guarda cada serie, cambia un ejercicio de esa sesión, agrega cardio y cierra. Al cerrar guarda los minutos. Si no hay series ni cardio, borra la sesión. El peso cambia de 1 kg. `features/workouts/exercise-logger.tsx` muestra la guía, las series de la vez pasada y el botón **Cambiar**. `features/workouts/session-extras.tsx` pide el tiempo y el cardio. `features/workouts/plan.ts` interpreta el plan, sugiere la serie que toca y limita series, minutos y tipos de cardio. La sugerencia sale de la última sesión de la misma rutina: la serie del mismo número, o la última si ya se pasaron.
+**Entrenamiento.** `features/workouts/actions.ts` abre la sesión y copia los ejercicios a `session_exercises`. Guarda cada serie, permite corregir el peso y las repeticiones de una serie ya anotada, cambia un ejercicio de esa sesión, agrega cardio y cierra. Al cerrar guarda los minutos. Si no hay series ni cardio, borra la sesión. El peso cambia de 1 kg. Los botones de más y menos quedan fuera del formulario de guardar, para que un toque no reinicie el valor ni mande la serie. `features/workouts/exercise-logger.tsx` muestra la guía, las series de la vez pasada y el botón **Cambiar**. `features/workouts/session-extras.tsx` pide el tiempo y el cardio. `features/workouts/plan.ts` interpreta el plan, sugiere la serie que toca y limita series, minutos y tipos de cardio. La sugerencia sale de la última sesión de la misma rutina: la serie del mismo número, o la última si ya se pasaron. Después de anotar una serie, el siguiente peso se queda en lo que acabas de guardar.
 
 **Historial.** `app/history/page.tsx` lista sesiones que tienen al menos una serie o un bloque de cardio, y muestra la duración si existe. `lib/embedded-count.ts` lee ese conteo. `features/history/format.ts` escribe la fecha en español sin depender del idioma del servidor. El detalle en `app/history/[id]/page.tsx` incluye minutos y cardio.
 
@@ -86,4 +86,4 @@ En cada push, `.github/workflows/test.yml` corre esas pruebas y `tsc --noEmit`.
 
 ## Qué no está
 
-Sigue pendiente cambiar el nombre a Fitrapp y generar una rutina a partir de los datos de la persona o con IA. Tampoco se editan series ya guardadas, no hay gráficas y no se reordenan ejercicios.
+Siguen pendientes las gráficas y reordenar ejercicios. El dominio .app, .fit o .fitness se compra aparte; la app ya se llama Fitrapp.

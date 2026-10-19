@@ -1,4 +1,4 @@
-export const INSTALL_DISMISS_KEY = "upfit-install-dismissed-at"
+export const INSTALL_DISMISS_KEY = "fitrapp-install-dismissed-at"
 export const INSTALL_DISMISS_MS = 14 * 24 * 60 * 60 * 1000
 
 export function shouldShowInstallPrompt(input: {

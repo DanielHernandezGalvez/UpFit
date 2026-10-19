@@ -26,11 +26,18 @@ export default async function RoutinesPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pb-10">
       <header className="space-y-2">
-        <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-          Upfit
-        </p>
         <h1 className="text-3xl font-semibold tracking-tight">Rutinas</h1>
       </header>
+
+      <Button
+        nativeButton={false}
+        render={<Link href="/datos" />}
+        variant="outline"
+        size="touch"
+        className="w-full"
+      >
+        Generar con tus datos
+      </Button>
 
       <ImportRoutineForm />
 

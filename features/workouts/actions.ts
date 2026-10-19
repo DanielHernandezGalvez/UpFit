@@ -136,6 +136,52 @@ export async function addSet(
   return { savedId: data.id }
 }
 
+export async function updateSet(input: {
+  sessionId: string
+  exerciseId: string
+  numeroSerie: number
+  peso: number
+  repeticiones: number
+}): Promise<{ error?: string }> {
+  const peso = Math.round(input.peso * 100) / 100
+  const repeticiones = input.repeticiones
+
+  if (!UUID_PATTERN.test(input.sessionId) || !UUID_PATTERN.test(input.exerciseId)) {
+    return { error: "No se pudo guardar la serie." }
+  }
+
+  if (!Number.isInteger(input.numeroSerie) || input.numeroSerie < 1) {
+    return { error: "No se pudo guardar la serie." }
+  }
+
+  if (!Number.isFinite(peso) || peso < 0 || peso > 9999.99) {
+    return { error: "El peso tiene que estar entre 0 y 9999.99 kg." }
+  }
+
+  if (!Number.isInteger(repeticiones) || repeticiones < 1 || repeticiones > 999) {
+    return { error: "Las repeticiones tienen que ser un número entero." }
+  }
+
+  const { supabase, user } = await requireUser()
+  const { error } = await supabase
+    .from("session_sets")
+    .update({ peso, repeticiones })
+    .eq("session_id", input.sessionId)
+    .eq("exercise_id", input.exerciseId)
+    .eq("numero_serie", input.numeroSerie)
+
+  if (error) {
+    return { error: "No se pudo guardar la serie." }
+  }
+
+  revalidatePath(`/workout/${input.sessionId}`)
+  revalidatePath(`/history/${input.sessionId}`)
+  revalidatePath("/")
+  revalidatePath("/history")
+  revalidateUserViews(user.id)
+  return {}
+}
+
 export async function finishWorkout(formData: FormData) {
   const sessionId = String(formData.get("sessionId") ?? "")
 

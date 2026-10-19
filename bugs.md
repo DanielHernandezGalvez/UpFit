@@ -1,6 +1,6 @@
 # Historial de bugs
 
-Registro de fallos vistos en Upfit y de cómo se corrigieron. El sitio publicado es [https://up-fit-eight.vercel.app](https://up-fit-eight.vercel.app/).
+Registro de fallos vistos en Fitrapp y de cómo se corrigieron. El sitio publicado es [https://up-fit-eight.vercel.app](https://up-fit-eight.vercel.app/).
 
 ## El historial y las mejores marcas no cargaban
 

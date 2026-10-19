@@ -1,6 +1,6 @@
-# Upfit
+# Fitrapp
 
-Upfit es una PWA para anotar entrenamientos de gimnasio desde el celular. Se instala en la pantalla de inicio, se abre a pantalla completa y usa el icono de la app. Hay un solo usuario: la persona que entrena. No hay roles de instructor ni cuentas compartidas.
+Fitrapp es una PWA para anotar entrenamientos de gimnasio desde el celular. Se instala en la pantalla de inicio, se abre a pantalla completa y usa el icono de la app. Hay un solo usuario: la persona que entrena. No hay roles de instructor ni cuentas compartidas.
 
 El fondo es blanco y el amarillo marca la acción principal de cada pantalla.
 
@@ -52,7 +52,7 @@ La app queda en `https://up-fit-eight.vercel.app/`.
 
 ## Instalarla como PWA
 
-Upfit incluye un manifiesto web y un service worker. El nombre de la app es Upfit y los iconos están en `public`:
+Fitrapp incluye un manifiesto web y un service worker. El nombre de la app es Fitrapp y los iconos están en `public`:
 
 - `favicon.svg`
 - `icon-192.png` y `icon-512.png`

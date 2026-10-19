@@ -94,14 +94,14 @@ export function InstallPrompt() {
   if (!open) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-24 z-50 px-4 md:bottom-6">
+    <div className="fixed inset-x-0 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] z-50 px-4 md:bottom-6">
       <div
         role="dialog"
         aria-labelledby="install-title"
         className="mx-auto w-full max-w-md rounded-3xl border bg-card p-4 shadow-sm"
       >
         <h2 id="install-title" className="text-lg font-semibold">
-          Instala Upfit
+          Instala Fitrapp
         </h2>
         <p className="mt-1 text-base leading-relaxed text-muted-foreground">
           {ios

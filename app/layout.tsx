@@ -16,15 +16,15 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  applicationName: "Upfit",
+  applicationName: "Fitrapp",
   title: {
-    default: "Upfit",
-    template: "%s · Upfit",
+    default: "Fitrapp",
+    template: "%s · Fitrapp",
   },
   description: "Registra tus entrenamientos y sigue tu progreso en el gym.",
   appleWebApp: {
     capable: true,
-    title: "Upfit",
+    title: "Fitrapp",
     statusBarStyle: "default",
   },
   icons: {

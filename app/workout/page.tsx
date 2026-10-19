@@ -18,11 +18,8 @@ export default async function WorkoutPage() {
     .order("created_at", { ascending: true })
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-24 md:max-w-3xl md:pb-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:pb-10">
       <header className="space-y-2">
-        <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-          Upfit
-        </p>
         <h1 className="text-3xl font-semibold tracking-tight">Iniciar rutina</h1>
       </header>
 

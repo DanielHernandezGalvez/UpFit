@@ -4,9 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { StepButton } from "@/components/step-button"
 import { FormMessage } from "@/features/auth/form-message"
-import { formatKg } from "@/features/dashboard/stats"
-import { addSet, swapExercise, type AddSetState } from "@/features/workouts/actions"
+import { addSet, updateSet, swapExercise, type AddSetState } from "@/features/workouts/actions"
 import { suggestionForSet } from "@/features/workouts/plan"
 
 type LoggedSet = {
@@ -19,6 +19,117 @@ function formatAmount(value: number) {
   const rounded = Math.round(value * 100) / 100
   if (Number.isInteger(rounded)) return String(rounded)
   return rounded.toFixed(2).replace(/0$/, "")
+}
+
+function AmountStepper({
+  label,
+  value,
+  decreaseLabel,
+  increaseLabel,
+  onDecrease,
+  onIncrease,
+}: {
+  label: string
+  value: string
+  decreaseLabel: string
+  increaseLabel: string
+  onDecrease: () => void
+  onIncrease: () => void
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <span className="text-sm font-medium">{label}</span>
+      <div className="flex items-center justify-between gap-4">
+        <StepButton label={decreaseLabel} symbol="−" onClick={onDecrease} />
+        <span className="min-w-12 text-center text-2xl font-semibold tabular-nums">{value}</span>
+        <StepButton label={increaseLabel} symbol="+" onClick={onIncrease} />
+      </div>
+    </div>
+  )
+}
+
+export function SavedSetEditor({
+  sessionId,
+  exerciseId,
+  numeroSerie,
+  peso,
+  repeticiones,
+}: {
+  sessionId: string
+  exerciseId: string
+  numeroSerie: number
+  peso: number
+  repeticiones: number
+}) {
+  const router = useRouter()
+  const [weight, setWeight] = useState(peso)
+  const [reps, setReps] = useState(repeticiones)
+
+  useEffect(() => {
+    setWeight(peso)
+    setReps(repeticiones)
+  }, [peso, repeticiones])
+
+  async function commit(nextWeight: number, nextReps: number) {
+    await updateSet({
+      sessionId,
+      exerciseId,
+      numeroSerie,
+      peso: nextWeight,
+      repeticiones: nextReps,
+    })
+    router.refresh()
+  }
+
+  return (
+    <li className="flex flex-col gap-2 rounded-2xl border px-3 py-3">
+      <span className="text-sm text-muted-foreground">Serie {numeroSerie}</span>
+      <div className="flex items-center gap-6">
+        <div className="flex flex-1 items-center justify-between gap-3">
+          <StepButton
+            label={`Menos peso de la serie ${numeroSerie}`}
+            symbol="−"
+            onClick={() => {
+              const next = changeWeight(weight, -1)
+              setWeight(next)
+              void commit(next, reps)
+            }}
+          />
+          <span className="text-base font-semibold tabular-nums">{formatAmount(weight)} kg</span>
+          <StepButton
+            label={`Más peso de la serie ${numeroSerie}`}
+            symbol="+"
+            onClick={() => {
+              const next = changeWeight(weight, 1)
+              setWeight(next)
+              void commit(next, reps)
+            }}
+          />
+        </div>
+        <div className="flex flex-1 items-center justify-between gap-3">
+          <StepButton
+            label={`Menos repeticiones de la serie ${numeroSerie}`}
+            symbol="−"
+            onClick={() => {
+              const next = Math.max(1, reps - 1)
+              setReps(next)
+              void commit(weight, next)
+            }}
+          />
+          <span className="text-base font-semibold tabular-nums">{reps}</span>
+          <StepButton
+            label={`Más repeticiones de la serie ${numeroSerie}`}
+            symbol="+"
+            onClick={() => {
+              const next = Math.min(999, reps + 1)
+              setReps(next)
+              void commit(weight, next)
+            }}
+          />
+        </div>
+      </div>
+    </li>
+  )
 }
 
 function changeWeight(peso: number, delta: number) {
@@ -62,10 +173,9 @@ export function ExerciseLogger({
   const refreshedId = useRef<string | null>(null)
 
   useEffect(() => {
-    const next = suggestionForSet(previousSets, sets.length)
-    if (!next && !lastSet) return
-    setPeso(next?.peso ?? lastSet?.peso ?? 20)
-    setReps(next?.repeticiones ?? lastSet?.repeticiones ?? 8)
+    if (sets.length === 0 || !lastSet) return
+    setPeso(lastSet.peso)
+    setReps(lastSet.repeticiones)
   }, [sets.length])
 
   useEffect(() => {
@@ -127,20 +237,38 @@ export function ExerciseLogger({
       {sets.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {sets.map((set) => (
-            <li
+            <SavedSetEditor
               key={set.numero_serie}
-              className="flex items-center justify-between text-base"
-            >
-              <span className="text-muted-foreground">Serie {set.numero_serie}</span>
-              <span className="font-semibold">
-                {formatKg(set.peso)} × {set.repeticiones}
-              </span>
-            </li>
+              sessionId={sessionId}
+              exerciseId={exerciseId}
+              numeroSerie={set.numero_serie}
+              peso={set.peso}
+              repeticiones={set.repeticiones}
+            />
           ))}
         </ul>
       ) : (
         <p className="text-base text-muted-foreground">Sin series todavía.</p>
       )}
+
+      <div className="flex gap-6">
+        <AmountStepper
+          label="Peso (kg)"
+          value={formatAmount(peso)}
+          decreaseLabel="Bajar peso"
+          increaseLabel="Subir peso"
+          onDecrease={() => setPeso((current) => changeWeight(current, -1))}
+          onIncrease={() => setPeso((current) => changeWeight(current, 1))}
+        />
+        <AmountStepper
+          label="Reps"
+          value={String(reps)}
+          decreaseLabel="Bajar repeticiones"
+          increaseLabel="Subir repeticiones"
+          onDecrease={() => setReps((current) => Math.max(1, current - 1))}
+          onIncrease={() => setReps((current) => Math.min(999, current + 1))}
+        />
+      </div>
 
       <form action={formAction} className="flex flex-col gap-3">
         <FormMessage error={state?.error} />
@@ -148,61 +276,6 @@ export function ExerciseLogger({
         <input type="hidden" name="exerciseId" value={exerciseId} />
         <input type="hidden" name="peso" value={peso} />
         <input type="hidden" name="repeticiones" value={reps} />
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Peso (kg)</span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="icon-lg"
-                variant="outline"
-                aria-label="Bajar peso"
-                onClick={() => setPeso((current) => changeWeight(current, -1))}
-              >
-                −
-              </Button>
-              <span className="flex-1 text-center text-2xl font-semibold tabular-nums">
-                {formatAmount(peso)}
-              </span>
-              <Button
-                type="button"
-                size="icon-lg"
-                variant="outline"
-                aria-label="Subir peso"
-                onClick={() => setPeso((current) => changeWeight(current, 1))}
-              >
-                +
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Reps</span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="icon-lg"
-                variant="outline"
-                aria-label="Bajar repeticiones"
-                onClick={() => setReps((current) => Math.max(1, current - 1))}
-              >
-                −
-              </Button>
-              <span className="flex-1 text-center text-2xl font-semibold tabular-nums">
-                {reps}
-              </span>
-              <Button
-                type="button"
-                size="icon-lg"
-                variant="outline"
-                aria-label="Subir repeticiones"
-                onClick={() => setReps((current) => Math.min(999, current + 1))}
-              >
-                +
-              </Button>
-            </div>
-          </div>
-        </div>
 
         <Button type="submit" size="touch" className="w-full" disabled={pending}>
           {pending ? "Guardando..." : `Agregar serie ${nextSet}`}

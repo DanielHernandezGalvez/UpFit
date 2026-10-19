@@ -21,7 +21,7 @@ export function LandingPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 py-8 md:max-w-3xl">
       <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-        Upfit
+        Fitrapp
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight">
         Tu entrenamiento, en el celular

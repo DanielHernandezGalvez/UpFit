@@ -8,7 +8,7 @@ export function AuthHeader({
   return (
     <header className="mb-8 space-y-2">
       <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-        Upfit
+        Fitrapp
       </p>
       <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="text-base leading-relaxed text-muted-foreground">

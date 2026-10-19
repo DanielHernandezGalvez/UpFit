@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Upfit",
-    short_name: "Upfit",
+    name: "Fitrapp",
+    short_name: "Fitrapp",
     description: "Registra tus entrenamientos y sigue tu progreso en el gimnasio.",
     id: "/",
     start_url: "/",

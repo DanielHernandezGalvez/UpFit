@@ -35,11 +35,7 @@ export function AppNav() {
               <Link
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[11px] font-medium md:flex-row md:gap-2 md:rounded-full md:px-4 md:py-2 md:text-sm ${
-                  accent
-                    ? "text-foreground"
-                    : active
-                      ? "text-foreground"
-                      : "text-muted-foreground"
+                  active || accent ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 <span
@@ -47,7 +43,7 @@ export function AppNav() {
                     accent
                       ? "bg-primary text-primary-foreground"
                       : active
-                        ? "bg-muted text-foreground"
+                        ? "bg-primary/35 text-foreground"
                         : "text-muted-foreground"
                   }`}
                 >
